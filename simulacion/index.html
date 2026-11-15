@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Tablero Auto - Simulación Ruta 2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; color: #e8e8e8;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  .wrap { height: 100%; display: grid; grid-template-rows: auto 1fr auto auto; gap: 8px; padding: 10px; }
+  .top { display: flex; justify-content: space-between; font-size: 14px; color: #888; }
+  .estado.ok { color: #3ddc84; } .estado.mal { color: #ff5252; } .estado.esp { color: #ffb300; }
+  .vel { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .vel .num { font-size: 34vmin; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
+  .vel .uni { font-size: 5vmin; color: #888; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 8px; text-align: center; }
+  .card .lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+  .card .val { font-size: 7vmin; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .card .sub { font-size: 12px; color: #666; }
+  .btns { display: flex; gap: 8px; }
+  button { flex: 1; padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #333;
+    background: #1a1a1a; color: #ddd; }
+  button:active { background: #333; }
+  #brujula { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
+    transition: transform .3s; transform-origin: 50% 50%; }
+  #brujula svg { width: 100%; height: 100%; display: block; }
+  /* v2: cartel de cámara de velocidad (top/left/right, sin inset, por el iPad viejo) */
+  #cam { display: none; position: fixed; top: 34px; left: 10px; right: 10px; z-index: 5;
+    background: #ffb300; color: #000; border-radius: 14px; padding: 10px 14px;
+    align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.6); }
+  #cam.on { display: flex; }
+  #cam.pasado { background: #ff1a1a; color: #fff; animation: titila .6s infinite alternate; }
+  @keyframes titila { from { opacity: 1; } to { opacity: .55; } }
+  #cam .ico { font-size: 11vmin; line-height: 1; }
+  #cam .txt { flex: 1; }
+  #cam .t1 { font-size: 5.6vmin; font-weight: 800; white-space: nowrap; }
+  #cam .t2 { font-size: 4.5vmin; font-weight: 600; }
+  #cam .t3 { font-size: 4.2vmin; font-weight: 700; margin-top: 2px; opacity: .85; }   /* v3: ruta y localidad */
+  #cam .max { width: 19vmin; height: 19vmin; border-radius: 50%; background: #fff; color: #000;
+    border: 2.2vmin solid #e00000; display: flex; align-items: center; justify-content: center;
+    font-size: 8vmin; font-weight: 800; flex: none; }
+  #sonido { color: #ffb300; }
+  @media (orientation: landscape) {
+    .wrap { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr auto; }
+    .top { grid-column: 1 / 3; }
+    .vel { grid-row: 2 / 4; }
+    .vel .num { font-size: 40vmin; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span id="estado" class="estado esp">● Esperando GPS…</span>
+    <span id="sonido">🔇 Tocá para activar el sonido</span>
+    <span id="reloj">--:--</span>
+  </div>
+
+  <div id="cam"><div class="ico">📷</div>
+    <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
+    <div class="max" id="cam-max">--</div></div>
+
+  <div class="vel">
+    <div class="num" id="vel">0</div>
+    <div class="uni">km/h</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="lbl">Rumbo</div>
+      <div class="val"><span id="brujula"><svg viewBox="0 0 100 100"><polygon points="50,4 68,52 50,44 32,52" fill="#ff4500" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><polygon points="32,52 50,44 68,52 50,96" fill="#555" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="48" r="6" fill="#fff"/></svg></span> <span id="dir">--</span></div>
+      <div class="sub" id="grados">---°</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Altura</div>
+      <div class="val" id="alt">--</div>
+      <div class="sub">m (GPS)</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Precisión</div>
+      <div class="val" id="prec">--</div>
+      <div class="sub">m</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Distancia</div>
+      <div class="val" id="dist">0.00</div>
+      <div class="sub">km</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Máxima</div>
+      <div class="val" id="max">0</div>
+      <div class="sub">km/h</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Promedio</div>
+      <div class="val" id="prom">0</div>
+      <div class="sub" id="tiempo">00:00:00</div>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button id="btnReset">Reiniciar viaje</button>
+    <button id="btnPant">Pantalla completa</button>
+  </div>
+</div>
+
+<script src="ruta.js"></script><script src="demo.js"></script><script src="../camaras.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
+
+let ultimo = null;        // último punto válido
+let distKm = 0, maxKmh = 0;
+let tMov = 0;             // segundos en movimiento
+let inicio = Date.now();
+let rumboGps = null;      // rumbo por GPS cuando hay movimiento
+let velActual = 0;
+
+// Distancia entre dos coordenadas (Haversine), en km
+function distancia(a, b) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*rad) * Math.cos(b.lat*rad) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// Color de la velocidad según km/h
+function colorVel(k) {
+  if (k <= 40) return "#ffffff";   // blanco
+  if (k <= 60) return "#3ddc84";   // verde
+  if (k <= 80) return "#ffd600";   // amarillo
+  if (k <= 130) return "#ff3030";  // rojo
+  return "#c77dff";                // lila
+}
+
+function mostrarRumbo(grados) {
+  if (grados == null || isNaN(grados)) return;
+  grados = (grados + 360) % 360;
+  $("dir").textContent = PUNTOS[Math.round(grados / 45) % 8];
+  $("grados").textContent = Math.round(grados) + "°";
+  $("brujula").style.transform = `rotate(${grados}deg)`;
+}
+
+function estado(txt, clase) {
+  $("estado").textContent = "● " + txt;
+  $("estado").className = "estado " + clase;
+}
+
+function onPos(p) {
+  const c = p.coords;
+  const ahora = p.timestamp;
+  estado("GPS OK", "ok");
+
+  // Velocidad: la del GPS si viene, si no se calcula
+  let kmh = (c.speed != null && !isNaN(c.speed)) ? c.speed * 3.6 : null;
+  const punto = { lat: c.latitude, lon: c.longitude, t: ahora };
+
+  if (ultimo) {
+    const d = distancia(ultimo, punto);
+    const dt = (ahora - ultimo.t) / 1000;
+    if (kmh == null && dt > 0) kmh = (d / dt) * 3600;
+    // Sumar distancia solo si la precisión es razonable y hay movimiento real
+    if (c.accuracy < 30 && kmh > 3) {
+      distKm += d;
+      tMov += dt;
+    }
+  }
+  ultimo = punto;
+
+  kmh = kmh || 0;
+  if (kmh < 2) kmh = 0;   // filtra el "ruido" estando parado
+  velActual = kmh;
+  if (kmh > maxKmh) maxKmh = kmh;
+
+  $("vel").textContent = Math.round(kmh);
+  $("vel").style.color = colorVel(kmh);
+  $("max").textContent = Math.round(maxKmh);
+  $("dist").textContent = distKm.toFixed(2);
+  $("prec").textContent = Math.round(c.accuracy);
+  $("alt").textContent = (c.altitude != null) ? Math.round(c.altitude) : "--";
+  $("prom").textContent = tMov > 0 ? Math.round(distKm / (tMov / 3600)) : 0;
+
+  // En movimiento el rumbo del GPS es más confiable que la brújula
+  if (c.heading != null && !isNaN(c.heading) && kmh > 5) {
+    rumboGps = c.heading;
+    mostrarRumbo(rumboGps);
+  } else {
+    rumboGps = null;
+  }
+  camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
+}
+
+function onErr(e) {
+  const msj = { 1: "Permiso de ubicación denegado", 2: "Sin señal GPS", 3: "GPS sin respuesta" };
+  estado(msj[e.code] || "Error GPS", "mal");
+}
+
+if ("geolocation" in navigator) {
+  navigator.geolocation.watchPosition(onPos, onErr,
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+} else {
+  estado("Este navegador no tiene GPS", "mal");
+}
+
+// Brújula del celular: se usa cuando el auto está parado o lento
+function onOrient(e) {
+  if (rumboGps != null) return;
+  let g = null;
+  if (e.webkitCompassHeading != null) g = e.webkitCompassHeading;     // iPhone
+  else if (e.absolute && e.alpha != null) g = 360 - e.alpha;          // Android
+  if (g != null) mostrarRumbo(g);
+}
+if ("ondeviceorientationabsolute" in window) {
+  window.addEventListener("deviceorientationabsolute", onOrient);
+} else {
+  window.addEventListener("deviceorientation", onOrient);
+}
+
+// ===== v2: AVISO DE CÁMARAS DE VELOCIDAD =====
+// Las cámaras vienen de camaras.js (OpenStreetMap). Sólo se avisan las que están ADELANTE
+// (en la dirección en que va el auto) y andando a más de 10 km/h.
+const CAM_BUSCAR_M = 2000;   // se miran las cámaras a menos de esta distancia
+const CAM_ANGULO = 30;       // "adelante" = hasta 30° a cada lado del rumbo (más cerca se abre más)
+const CAM_SEG = 30;          // se avisa 30 segundos antes de llegar...
+const CAM_MIN_M = 400;       // ...pero nunca a menos de 400 m
+const CAM_MAX_M = 1200;      // ...ni a más de 1200 m
+const CAM_TOLERANCIA = 0;    // km/h por encima de la máxima antes de avisar "pasado"
+let camActual = null;        // cámara que se está avisando: {i, dMin}
+let camPasadas = {};         // cámaras ya pasadas → hora (no se vuelven a avisar por 3 minutos)
+let pitidoUlt = 0, pasadoDicho = false;
+
+function rumboA(a, b) {      // rumbo de a hacia b, en grados
+  const r = Math.PI / 180;
+  const y = Math.sin((b.lon - a.lon) * r) * Math.cos(b.lat * r);
+  const x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lon - a.lon) * r);
+  return (Math.atan2(y, x) / r + 360) % 360;
+}
+function difAng(a, b) { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
+
+function camRevisar(p, kmh, rumbo) {
+  const ahora = Date.now();
+  if (typeof CAMARAS === "undefined") return;
+  // ¿La que se está avisando ya quedó atrás?
+  if (camActual) {
+    const c = CAMARAS[camActual.i], cp = { lat: c[0], lon: c[1] };
+    const d = distancia(p, cp) * 1000;
+    const atras = rumbo != null && difAng(rumbo, rumboA(p, cp)) > 100;
+    if (d < camActual.dMin) camActual.dMin = d;
+    if ((atras && d < 300) || d > camActual.dMin + 150 || d > CAM_MAX_M + 500) {
+      camPasadas[camActual.i] = ahora;
+      camActual = null;
+      camMostrar(null);
+    } else {
+      camMostrar(c, d, kmh);
+      return;
+    }
+  }
+  if (rumbo == null || kmh < 10) return;   // parado o sin rumbo: no se sabe qué está adelante
+  const avisoM = Math.min(CAM_MAX_M, Math.max(CAM_MIN_M, kmh / 3.6 * CAM_SEG));
+  let mejor = -1, mejorD = 1e9;
+  for (let i = 0; i < CAMARAS.length; i++) {
+    const c = CAMARAS[i];
+    if (Math.abs(c[0] - p.lat) > 0.02 || Math.abs(c[1] - p.lon) > 0.025) continue;  // lejos: ni se calcula
+    if (camPasadas[i] && ahora - camPasadas[i] < 180000) continue;
+    const cp = { lat: c[0], lon: c[1] };
+    const d = distancia(p, cp) * 1000;
+    if (d > avisoM || d > mejorD) continue;
+    const ang = d < 150 ? 60 : CAM_ANGULO;
+    if (difAng(rumbo, rumboA(p, cp)) > ang) continue;
+    mejor = i; mejorD = d;
+  }
+  if (mejor < 0) return;
+  camActual = { i: mejor, dMin: mejorD };
+  const c = CAMARAS[mejor];
+  const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
+  pasadoDicho = !!yaPasado;   // si ya viene pasado, se dice todo junto (si no, la 2ª frase corta a la 1ª)
+  // v3: la voz dice dónde es ("Cámara de velocidad en Chascomús, a 850 metros...")
+  decir("Cámara de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  camMostrar(c, mejorD, kmh);
+}
+
+function metrosTexto(d) {
+  if (d >= 950) return (Math.round(d / 100) / 10).toString().replace(".", ",") + " kilómetros";
+  return (Math.round(d / 50) * 50) + " metros";
+}
+
+function camMostrar(c, d, kmh) {
+  const caja = $("cam");
+  if (!c) { caja.className = ""; return; }
+  const pasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
+  caja.className = "on" + (pasado ? " pasado" : "");
+  $("cam-t1").textContent = "CÁMARA a " + (d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m");
+  $("cam-t2").textContent = !c[2] ? "Sin dato de velocidad máxima" : pasado ? "¡BAJÁ LA VELOCIDAD!" : "Máxima " + c[2] + " km/h";
+  $("cam-max").textContent = c[2] || "?";
+  $("cam-t3").textContent = [c[4], c[3]].filter(Boolean).join(" · ");   // v3: "RP 2 · Chascomús"
+  if (pasado) {
+    const ahora = Date.now();
+    if (ahora - pitidoUlt > 1500) { pitidoUlt = ahora; pitido(); }
+    if (!pasadoDicho) { pasadoDicho = true; decir("Bajá la velocidad. Máxima " + c[2]); }
+  }
+}
+
+// ----- Sonido: el celular no deja sonar hasta que se toca la pantalla una vez -----
+let audioCtx = null, sonidoOk = false;
+function activarSonido() {
+  if (sonidoOk) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    if ("speechSynthesis" in window) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+    sonidoOk = true;
+    $("sonido").textContent = "📷 " + (typeof CAMARAS !== "undefined" ? CAMARAS.length.toLocaleString("es-AR") + " cámaras (© OpenStreetMap)" : "sin cámaras");
+    $("sonido").style.color = "#888";
+  } catch (e) {}
+}
+document.addEventListener("pointerdown", activarSonido);
+document.addEventListener("touchstart", activarSonido);
+
+function pitido() {
+  if (!audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    [0, 0.25].forEach(function (dt) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "square"; o.frequency.value = 1400;
+      g.gain.setValueAtTime(0.25, t + dt); g.gain.setValueAtTime(0, t + dt + 0.15);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + dt); o.stop(t + dt + 0.16);
+    });
+  } catch (e) {}
+}
+
+function decir(texto) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = "es-AR"; u.rate = 1.05;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// Reloj y tiempo de viaje
+setInterval(() => {
+  const d = new Date();
+  $("reloj").textContent = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  const s = Math.floor((Date.now() - inicio) / 1000);
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor(s % 3600 / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  $("tiempo").textContent = `${hh}:${mm}:${ss}`;
+}, 1000);
+
+// Mantener la pantalla encendida
+let wakeLock = null;
+async function pedirWakeLock() {
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+}
+pedirWakeLock();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") pedirWakeLock();
+});
+
+$("btnReset").onclick = () => {
+  distKm = 0; maxKmh = 0; tMov = 0; inicio = Date.now(); ultimo = null;
+  $("dist").textContent = "0.00"; $("max").textContent = "0"; $("prom").textContent = "0";
+};
+
+$("btnPant").onclick = () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+  pedirWakeLock();
+};
+</script>
+</body>
+</html>

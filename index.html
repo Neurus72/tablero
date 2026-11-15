@@ -38,6 +38,7 @@
   #cam .txt { flex: 1; }
   #cam .t1 { font-size: 5.6vmin; font-weight: 800; white-space: nowrap; }
   #cam .t2 { font-size: 4.5vmin; font-weight: 600; }
+  #cam .t3 { font-size: 4.2vmin; font-weight: 700; margin-top: 2px; opacity: .85; }   /* v3: ruta y localidad */
   #cam .max { width: 19vmin; height: 19vmin; border-radius: 50%; background: #fff; color: #000;
     border: 2.2vmin solid #e00000; display: flex; align-items: center; justify-content: center;
     font-size: 8vmin; font-weight: 800; flex: none; }
@@ -59,7 +60,7 @@
   </div>
 
   <div id="cam"><div class="ico">📷</div>
-    <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div></div>
+    <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
     <div class="max" id="cam-max">--</div></div>
 
   <div class="vel">
@@ -276,7 +277,8 @@ function camRevisar(p, kmh, rumbo) {
   const c = CAMARAS[mejor];
   const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
   pasadoDicho = !!yaPasado;   // si ya viene pasado, se dice todo junto (si no, la 2ª frase corta a la 1ª)
-  decir("Cámara de velocidad a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  // v3: la voz dice dónde es ("Cámara de velocidad en Chascomús, a 850 metros...")
+  decir("Cámara de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
   camMostrar(c, mejorD, kmh);
 }
 
@@ -293,6 +295,7 @@ function camMostrar(c, d, kmh) {
   $("cam-t1").textContent = "CÁMARA a " + (d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m");
   $("cam-t2").textContent = !c[2] ? "Sin dato de velocidad máxima" : pasado ? "¡BAJÁ LA VELOCIDAD!" : "Máxima " + c[2] + " km/h";
   $("cam-max").textContent = c[2] || "?";
+  $("cam-t3").textContent = [c[4], c[3]].filter(Boolean).join(" · ");   // v3: "RP 2 · Chascomús"
   if (pasado) {
     const ahora = Date.now();
     if (ahora - pitidoUlt > 1500) { pitidoUlt = ahora; pitido(); }
