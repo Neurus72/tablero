@@ -27,6 +27,21 @@
   #brujula { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
     transition: transform .3s; transform-origin: 50% 50%; }
   #brujula svg { width: 100%; height: 100%; display: block; }
+  /* v2: cartel de cámara de velocidad (top/left/right, sin inset, por el iPad viejo) */
+  #cam { display: none; position: fixed; top: 34px; left: 10px; right: 10px; z-index: 5;
+    background: #ffb300; color: #000; border-radius: 14px; padding: 10px 14px;
+    align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.6); }
+  #cam.on { display: flex; }
+  #cam.pasado { background: #ff1a1a; color: #fff; animation: titila .6s infinite alternate; }
+  @keyframes titila { from { opacity: 1; } to { opacity: .55; } }
+  #cam .ico { font-size: 11vmin; line-height: 1; }
+  #cam .txt { flex: 1; }
+  #cam .t1 { font-size: 5.6vmin; font-weight: 800; white-space: nowrap; }
+  #cam .t2 { font-size: 4.5vmin; font-weight: 600; }
+  #cam .max { width: 19vmin; height: 19vmin; border-radius: 50%; background: #fff; color: #000;
+    border: 2.2vmin solid #e00000; display: flex; align-items: center; justify-content: center;
+    font-size: 8vmin; font-weight: 800; flex: none; }
+  #sonido { color: #ffb300; }
   @media (orientation: landscape) {
     .wrap { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr auto; }
     .top { grid-column: 1 / 3; }
@@ -39,8 +54,13 @@
 <div class="wrap">
   <div class="top">
     <span id="estado" class="estado esp">● Esperando GPS…</span>
+    <span id="sonido">🔇 Tocá para activar el sonido</span>
     <span id="reloj">--:--</span>
   </div>
+
+  <div id="cam"><div class="ico">📷</div>
+    <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div></div>
+    <div class="max" id="cam-max">--</div></div>
 
   <div class="vel">
     <div class="num" id="vel">0</div>
@@ -86,6 +106,7 @@
   </div>
 </div>
 
+<script src="camaras.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
@@ -168,6 +189,7 @@ function onPos(p) {
   } else {
     rumboGps = null;
   }
+  camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
 }
 
 function onErr(e) {
@@ -194,6 +216,128 @@ if ("ondeviceorientationabsolute" in window) {
   window.addEventListener("deviceorientationabsolute", onOrient);
 } else {
   window.addEventListener("deviceorientation", onOrient);
+}
+
+// ===== v2: AVISO DE CÁMARAS DE VELOCIDAD =====
+// Las cámaras vienen de camaras.js (OpenStreetMap). Sólo se avisan las que están ADELANTE
+// (en la dirección en que va el auto) y andando a más de 10 km/h.
+const CAM_BUSCAR_M = 2000;   // se miran las cámaras a menos de esta distancia
+const CAM_ANGULO = 30;       // "adelante" = hasta 30° a cada lado del rumbo (más cerca se abre más)
+const CAM_SEG = 30;          // se avisa 30 segundos antes de llegar...
+const CAM_MIN_M = 400;       // ...pero nunca a menos de 400 m
+const CAM_MAX_M = 1200;      // ...ni a más de 1200 m
+const CAM_TOLERANCIA = 0;    // km/h por encima de la máxima antes de avisar "pasado"
+let camActual = null;        // cámara que se está avisando: {i, dMin}
+let camPasadas = {};         // cámaras ya pasadas → hora (no se vuelven a avisar por 3 minutos)
+let pitidoUlt = 0, pasadoDicho = false;
+
+function rumboA(a, b) {      // rumbo de a hacia b, en grados
+  const r = Math.PI / 180;
+  const y = Math.sin((b.lon - a.lon) * r) * Math.cos(b.lat * r);
+  const x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lon - a.lon) * r);
+  return (Math.atan2(y, x) / r + 360) % 360;
+}
+function difAng(a, b) { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
+
+function camRevisar(p, kmh, rumbo) {
+  const ahora = Date.now();
+  if (typeof CAMARAS === "undefined") return;
+  // ¿La que se está avisando ya quedó atrás?
+  if (camActual) {
+    const c = CAMARAS[camActual.i], cp = { lat: c[0], lon: c[1] };
+    const d = distancia(p, cp) * 1000;
+    const atras = rumbo != null && difAng(rumbo, rumboA(p, cp)) > 100;
+    if (d < camActual.dMin) camActual.dMin = d;
+    if ((atras && d < 300) || d > camActual.dMin + 150 || d > CAM_MAX_M + 500) {
+      camPasadas[camActual.i] = ahora;
+      camActual = null;
+      camMostrar(null);
+    } else {
+      camMostrar(c, d, kmh);
+      return;
+    }
+  }
+  if (rumbo == null || kmh < 10) return;   // parado o sin rumbo: no se sabe qué está adelante
+  const avisoM = Math.min(CAM_MAX_M, Math.max(CAM_MIN_M, kmh / 3.6 * CAM_SEG));
+  let mejor = -1, mejorD = 1e9;
+  for (let i = 0; i < CAMARAS.length; i++) {
+    const c = CAMARAS[i];
+    if (Math.abs(c[0] - p.lat) > 0.02 || Math.abs(c[1] - p.lon) > 0.025) continue;  // lejos: ni se calcula
+    if (camPasadas[i] && ahora - camPasadas[i] < 180000) continue;
+    const cp = { lat: c[0], lon: c[1] };
+    const d = distancia(p, cp) * 1000;
+    if (d > avisoM || d > mejorD) continue;
+    const ang = d < 150 ? 60 : CAM_ANGULO;
+    if (difAng(rumbo, rumboA(p, cp)) > ang) continue;
+    mejor = i; mejorD = d;
+  }
+  if (mejor < 0) return;
+  camActual = { i: mejor, dMin: mejorD };
+  const c = CAMARAS[mejor];
+  const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
+  pasadoDicho = !!yaPasado;   // si ya viene pasado, se dice todo junto (si no, la 2ª frase corta a la 1ª)
+  decir("Cámara de velocidad a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  camMostrar(c, mejorD, kmh);
+}
+
+function metrosTexto(d) {
+  if (d >= 950) return (Math.round(d / 100) / 10).toString().replace(".", ",") + " kilómetros";
+  return (Math.round(d / 50) * 50) + " metros";
+}
+
+function camMostrar(c, d, kmh) {
+  const caja = $("cam");
+  if (!c) { caja.className = ""; return; }
+  const pasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
+  caja.className = "on" + (pasado ? " pasado" : "");
+  $("cam-t1").textContent = "CÁMARA a " + (d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m");
+  $("cam-t2").textContent = !c[2] ? "Sin dato de velocidad máxima" : pasado ? "¡BAJÁ LA VELOCIDAD!" : "Máxima " + c[2] + " km/h";
+  $("cam-max").textContent = c[2] || "?";
+  if (pasado) {
+    const ahora = Date.now();
+    if (ahora - pitidoUlt > 1500) { pitidoUlt = ahora; pitido(); }
+    if (!pasadoDicho) { pasadoDicho = true; decir("Bajá la velocidad. Máxima " + c[2]); }
+  }
+}
+
+// ----- Sonido: el celular no deja sonar hasta que se toca la pantalla una vez -----
+let audioCtx = null, sonidoOk = false;
+function activarSonido() {
+  if (sonidoOk) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    if ("speechSynthesis" in window) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+    sonidoOk = true;
+    $("sonido").textContent = "📷 " + (typeof CAMARAS !== "undefined" ? CAMARAS.length.toLocaleString("es-AR") + " cámaras (© OpenStreetMap)" : "sin cámaras");
+    $("sonido").style.color = "#888";
+  } catch (e) {}
+}
+document.addEventListener("pointerdown", activarSonido);
+document.addEventListener("touchstart", activarSonido);
+
+function pitido() {
+  if (!audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    [0, 0.25].forEach(function (dt) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "square"; o.frequency.value = 1400;
+      g.gain.setValueAtTime(0.25, t + dt); g.gain.setValueAtTime(0, t + dt + 0.15);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + dt); o.stop(t + dt + 0.16);
+    });
+  } catch (e) {}
+}
+
+function decir(texto) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = "es-AR"; u.rate = 1.05;
+    speechSynthesis.speak(u);
+  } catch (e) {}
 }
 
 // Reloj y tiempo de viaje
