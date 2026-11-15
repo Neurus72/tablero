@@ -24,6 +24,11 @@
   button { flex: 1; padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #333;
     background: #1a1a1a; color: #ddd; }
   button:active { background: #333; }
+  /* v5: un solo botón de viaje: verde INICIAR → naranja REINICIAR → rojo (confirmar) */
+  #btnViaje { font-size: 20px; font-weight: 800; padding: 14px; color: #fff; border: none; }
+  #btnViaje.verde { background: #1a9e45; }
+  #btnViaje.naranja { background: #f08a00; color: #000; }
+  #btnViaje.rojo { background: #e00000; }
   #brujula { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
     transition: transform .3s; transform-origin: 50% 50%; }
   #brujula svg { width: 100%; height: 100%; display: block; }
@@ -48,6 +53,7 @@
     .top { grid-column: 1 / 3; }
     .vel { grid-row: 2 / 4; }
     .vel .num { font-size: 40vmin; }
+    #cam { right: 46%; }   /* v5: acostado/PC: el cartel sólo sobre la velocidad, sin tapar los cuadros */
   }
 </style>
 </head>
@@ -102,8 +108,7 @@
   </div>
 
   <div class="btns">
-    <button id="btnReset">Reiniciar viaje</button>
-    <button id="btnPant">Pantalla completa</button>
+    <button id="btnViaje" class="verde">▶ INICIAR VIAJE</button>
   </div>
 </div>
 
@@ -116,6 +121,7 @@ let ultimo = null;        // último punto válido
 let distKm = 0, maxKmh = 0;
 let tMov = 0;             // segundos en movimiento
 let inicio = Date.now();
+let viajeOn = false;      // v5: la distancia, máxima, promedio y tiempo cuentan sólo con el viaje iniciado
 let rumboGps = null;      // rumbo por GPS cuando hay movimiento
 let velActual = 0;
 
@@ -163,7 +169,7 @@ function onPos(p) {
     const dt = (ahora - ultimo.t) / 1000;
     if (kmh == null && dt > 0) kmh = (d / dt) * 3600;
     // Sumar distancia solo si la precisión es razonable y hay movimiento real
-    if (c.accuracy < 30 && kmh > 3) {
+    if (viajeOn && c.accuracy < 30 && kmh > 3) {
       distKm += d;
       tMov += dt;
     }
@@ -173,7 +179,7 @@ function onPos(p) {
   kmh = kmh || 0;
   if (kmh < 2) kmh = 0;   // filtra el "ruido" estando parado
   velActual = kmh;
-  if (kmh > maxKmh) maxKmh = kmh;
+  if (viajeOn && kmh > maxKmh) maxKmh = kmh;
 
   $("vel").textContent = Math.round(kmh);
   $("vel").style.color = colorVel(kmh);
@@ -316,7 +322,7 @@ function activarSonido() {
     if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
       DeviceOrientationEvent.requestPermission().catch(function () {});
     }
-    $("sonido").textContent = "📷 " + (typeof CAMARAS !== "undefined" ? CAMARAS.length.toLocaleString("es-AR") + " cámaras (© OpenStreetMap)" : "sin cámaras");
+    $("sonido").textContent = "📷 " + (typeof CAMARAS !== "undefined" ? CAMARAS.length.toLocaleString("es-AR") + " cámaras · © OSM" : "sin cámaras");
     $("sonido").style.color = "#888";
   } catch (e) {}
 }
@@ -352,7 +358,7 @@ function decir(texto) {
 setInterval(() => {
   const d = new Date();
   $("reloj").textContent = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
-  const s = Math.floor((Date.now() - inicio) / 1000);
+  const s = viajeOn ? Math.floor((Date.now() - inicio) / 1000) : 0;
   const hh = String(Math.floor(s / 3600)).padStart(2, "0");
   const mm = String(Math.floor(s % 3600 / 60)).padStart(2, "0");
   const ss = String(s % 60).padStart(2, "0");
@@ -369,17 +375,31 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") pedirWakeLock();
 });
 
-$("btnReset").onclick = () => {
+// v5: botón del viaje.
+//   VERDE "INICIAR VIAJE" → empieza a contar → NARANJA "REINICIAR VIAJE"
+//   tocar el naranja → ROJO "TOCÁ DE NUEVO PARA REINICIAR" (si no se toca en 4 s vuelve a naranja)
+//   tocar el rojo → todo a cero y el viaje vuelve a arrancar (naranja)
+let rojoHasta = null;
+function viajeACero() {
   distKm = 0; maxKmh = 0; tMov = 0; inicio = Date.now(); ultimo = null;
   $("dist").textContent = "0.00"; $("max").textContent = "0"; $("prom").textContent = "0";
-};
-
-$("btnPant").onclick = () => {
-  // v4: sin "?." para que abra en iPad/iPhone viejos. En el iPhone no hay pantalla completa: no hace nada.
-  const el = document.documentElement;
-  if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen(); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
-  else if (document.exitFullscreen) document.exitFullscreen();
+  $("tiempo").textContent = "00:00:00";
+}
+function botonViaje(estado, texto) { $("btnViaje").className = estado; $("btnViaje").textContent = texto; }
+$("btnViaje").onclick = () => {
   pedirWakeLock();
+  if (!viajeOn) {                         // verde → iniciar
+    viajeACero(); viajeOn = true;
+    botonViaje("naranja", "↻ REINICIAR VIAJE");
+  } else if ($("btnViaje").className === "naranja") {   // naranja → pide confirmar
+    botonViaje("rojo", "TOCÁ DE NUEVO PARA REINICIAR");
+    clearTimeout(rojoHasta);
+    rojoHasta = setTimeout(() => botonViaje("naranja", "↻ REINICIAR VIAJE"), 4000);
+  } else {                                // rojo → reiniciar
+    clearTimeout(rojoHasta);
+    viajeACero();
+    botonViaje("naranja", "↻ REINICIAR VIAJE");
+  }
 };
 </script>
 </body>

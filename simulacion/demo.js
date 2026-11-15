@@ -21,13 +21,14 @@
     tapa.innerHTML = '<b style="font-size:28px">TABLERO AUTO · SIMULACIÓN RUTA 2</b><div>Así avisa las cámaras de velocidad en el celular.<br>Vamos a 125 km/h desde Ángel Etcheverry hasta Chascomús:<br>6 cámaras, en El Mirador (120) y Chascomús (80, 100, 80, 80 y 100).</div><div style="color:#ffb300;font-size:18px">🔊 Subí el volumen: también avisa con voz.</div><div style="color:#aaa;font-size:16px">Lejos de las cámaras el tiempo pasa más rápido (×12);<br>cerca de las cámaras, ×2 para que se vea y se escuche bien.</div><button style="flex:none;font-size:24px;padding:18px 30px;background:#3ddc84;color:#000;border:none">▶ ARRANCAR</button><a href="../" style="color:#9be7ff;font-size:16px">Abrir el Tablero Auto de verdad (con el GPS del celular)</a>';
     document.body.appendChild(tapa);
     const cartel = document.createElement('div');
-    cartel.style.cssText = 'position:fixed;left:10px;right:10px;bottom:8px;z-index:6;text-align:center;font-size:14px;color:#000;background:#9be7ff;border-radius:8px;padding:4px';
-    document.body.appendChild(cartel);
+    // v5: la franja va debajo de la velocidad (abajo tapaba el botón del viaje)
+    cartel.style.cssText = 'margin-top:14px;text-align:center;font-size:14px;color:#000;background:#9be7ff;border-radius:8px;padding:4px 10px';
+    document.querySelector('.vel').appendChild(cartel);
     let d = 4000, v = CRUCERO, t = Date.now(), frenarDesde = null, terminado = false;
-    tapa.querySelector('button').onclick = function(){ tapa.remove(); paso(); };
+    tapa.querySelector('button').onclick = function(){ tapa.remove(); document.getElementById('btnViaje').click(); paso(); };
     // Sólo para probar: ?hasta=METROS corre de golpe hasta ahí (sin esperar)
     const hasta = Number(new URLSearchParams(location.search).get('hasta') || 0);
-    if (hasta) { tapa.remove(); window.setTimeout = function(){}; while (d < hasta) paso(); }
+    if (hasta) { tapa.remove(); window.setTimeout = function(){}; document.getElementById('btnViaje').click(); while (d < hasta) paso(); }
     function paso(){
       if (d >= total) { cartel.innerHTML = 'FIN DE LA SIMULACIÓN · llegamos a Chascomús · <a href="">ver de nuevo</a>'; return; }
       const caja = document.getElementById('cam');
