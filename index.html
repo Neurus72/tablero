@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>Tablero Auto</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; color: #e8e8e8;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  .wrap { height: 100%; display: grid; grid-template-rows: auto 1fr auto auto; gap: 8px; padding: 10px; }
+  .top { display: flex; justify-content: space-between; font-size: 14px; color: #888; }
+  .estado.ok { color: #3ddc84; } .estado.mal { color: #ff5252; } .estado.esp { color: #ffb300; }
+  .vel { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .vel .num { font-size: 34vmin; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
+  .vel .uni { font-size: 5vmin; color: #888; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 8px; text-align: center; }
+  .card .lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+  .card .val { font-size: 7vmin; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .card .sub { font-size: 12px; color: #666; }
+  .btns { display: flex; gap: 8px; }
+  button { flex: 1; padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #333;
+    background: #1a1a1a; color: #ddd; }
+  button:active { background: #333; }
+  #brujula { display: inline-block; transition: transform .3s; }
+  @media (orientation: landscape) {
+    .wrap { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr auto; }
+    .top { grid-column: 1 / 3; }
+    .vel { grid-row: 2 / 4; }
+    .vel .num { font-size: 40vmin; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span id="estado" class="estado esp">● Esperando GPS…</span>
+    <span id="reloj">--:--</span>
+  </div>
+
+  <div class="vel">
+    <div class="num" id="vel">0</div>
+    <div class="uni">km/h</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="lbl">Rumbo</div>
+      <div class="val"><span id="brujula">▲</span> <span id="dir">--</span></div>
+      <div class="sub" id="grados">---°</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Altura</div>
+      <div class="val" id="alt">--</div>
+      <div class="sub">m (GPS)</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Precisión</div>
+      <div class="val" id="prec">--</div>
+      <div class="sub">m</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Distancia</div>
+      <div class="val" id="dist">0.00</div>
+      <div class="sub">km</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Máxima</div>
+      <div class="val" id="max">0</div>
+      <div class="sub">km/h</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Promedio</div>
+      <div class="val" id="prom">0</div>
+      <div class="sub" id="tiempo">00:00:00</div>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button id="btnReset">Reiniciar viaje</button>
+    <button id="btnPant">Pantalla completa</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
+
+let ultimo = null;        // último punto válido
+let distKm = 0, maxKmh = 0;
+let tMov = 0;             // segundos en movimiento
+let inicio = Date.now();
+let rumboGps = null;      // rumbo por GPS cuando hay movimiento
+let velActual = 0;
+
+// Distancia entre dos coordenadas (Haversine), en km
+function distancia(a, b) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*rad) * Math.cos(b.lat*rad) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function mostrarRumbo(grados) {
+  if (grados == null || isNaN(grados)) return;
+  grados = (grados + 360) % 360;
+  $("dir").textContent = PUNTOS[Math.round(grados / 45) % 8];
+  $("grados").textContent = Math.round(grados) + "°";
+  $("brujula").style.transform = `rotate(${grados}deg)`;
+}
+
+function estado(txt, clase) {
+  $("estado").textContent = "● " + txt;
+  $("estado").className = "estado " + clase;
+}
+
+function onPos(p) {
+  const c = p.coords;
+  const ahora = p.timestamp;
+  estado("GPS OK", "ok");
+
+  // Velocidad: la del GPS si viene, si no se calcula
+  let kmh = (c.speed != null && !isNaN(c.speed)) ? c.speed * 3.6 : null;
+  const punto = { lat: c.latitude, lon: c.longitude, t: ahora };
+
+  if (ultimo) {
+    const d = distancia(ultimo, punto);
+    const dt = (ahora - ultimo.t) / 1000;
+    if (kmh == null && dt > 0) kmh = (d / dt) * 3600;
+    // Sumar distancia solo si la precisión es razonable y hay movimiento real
+    if (c.accuracy < 30 && kmh > 3) {
+      distKm += d;
+      tMov += dt;
+    }
+  }
+  ultimo = punto;
+
+  kmh = kmh || 0;
+  if (kmh < 2) kmh = 0;   // filtra el "ruido" estando parado
+  velActual = kmh;
+  if (kmh > maxKmh) maxKmh = kmh;
+
+  $("vel").textContent = Math.round(kmh);
+  $("max").textContent = Math.round(maxKmh);
+  $("dist").textContent = distKm.toFixed(2);
+  $("prec").textContent = Math.round(c.accuracy);
+  $("alt").textContent = (c.altitude != null) ? Math.round(c.altitude) : "--";
+  $("prom").textContent = tMov > 0 ? Math.round(distKm / (tMov / 3600)) : 0;
+
+  // En movimiento el rumbo del GPS es más confiable que la brújula
+  if (c.heading != null && !isNaN(c.heading) && kmh > 5) {
+    rumboGps = c.heading;
+    mostrarRumbo(rumboGps);
+  } else {
+    rumboGps = null;
+  }
+}
+
+function onErr(e) {
+  const msj = { 1: "Permiso de ubicación denegado", 2: "Sin señal GPS", 3: "GPS sin respuesta" };
+  estado(msj[e.code] || "Error GPS", "mal");
+}
+
+if ("geolocation" in navigator) {
+  navigator.geolocation.watchPosition(onPos, onErr,
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+} else {
+  estado("Este navegador no tiene GPS", "mal");
+}
+
+// Brújula del celular: se usa cuando el auto está parado o lento
+function onOrient(e) {
+  if (rumboGps != null) return;
+  let g = null;
+  if (e.webkitCompassHeading != null) g = e.webkitCompassHeading;     // iPhone
+  else if (e.absolute && e.alpha != null) g = 360 - e.alpha;          // Android
+  if (g != null) mostrarRumbo(g);
+}
+if ("ondeviceorientationabsolute" in window) {
+  window.addEventListener("deviceorientationabsolute", onOrient);
+} else {
+  window.addEventListener("deviceorientation", onOrient);
+}
+
+// Reloj y tiempo de viaje
+setInterval(() => {
+  const d = new Date();
+  $("reloj").textContent = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  const s = Math.floor((Date.now() - inicio) / 1000);
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor(s % 3600 / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  $("tiempo").textContent = `${hh}:${mm}:${ss}`;
+}, 1000);
+
+// Mantener la pantalla encendida
+let wakeLock = null;
+async function pedirWakeLock() {
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+}
+pedirWakeLock();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") pedirWakeLock();
+});
+
+$("btnReset").onclick = () => {
+  distKm = 0; maxKmh = 0; tMov = 0; inicio = Date.now(); ultimo = null;
+  $("dist").textContent = "0.00"; $("max").textContent = "0"; $("prom").textContent = "0";
+};
+
+$("btnPant").onclick = () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+  pedirWakeLock();
+};
+</script>
+</body>
+</html>
