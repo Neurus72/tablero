@@ -312,12 +312,17 @@ function activarSonido() {
     audioCtx.resume();
     if ("speechSynthesis" in window) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
     sonidoOk = true;
+    // v4: en el iPhone la brújula necesita permiso, y sólo se puede pedir al tocar la pantalla
+    if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission().catch(function () {});
+    }
     $("sonido").textContent = "📷 " + (typeof CAMARAS !== "undefined" ? CAMARAS.length.toLocaleString("es-AR") + " cámaras (© OpenStreetMap)" : "sin cámaras");
     $("sonido").style.color = "#888";
   } catch (e) {}
 }
-document.addEventListener("pointerdown", activarSonido);
-document.addEventListener("touchstart", activarSonido);
+// v4: "click" y "touchend" (el iPhone no acepta pointerdown/touchstart para habilitar sonido y brújula)
+document.addEventListener("click", activarSonido);
+document.addEventListener("touchend", activarSonido);
 
 function pitido() {
   if (!audioCtx) return;
@@ -370,8 +375,10 @@ $("btnReset").onclick = () => {
 };
 
 $("btnPant").onclick = () => {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-  else document.exitFullscreen?.();
+  // v4: sin "?." para que abra en iPad/iPhone viejos. En el iPhone no hay pantalla completa: no hace nada.
+  const el = document.documentElement;
+  if (!document.fullscreenElement) { if (el.requestFullscreen) el.requestFullscreen(); else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); }
+  else if (document.exitFullscreen) document.exitFullscreen();
   pedirWakeLock();
 };
 </script>
