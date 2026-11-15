@@ -24,7 +24,9 @@
   button { flex: 1; padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #333;
     background: #1a1a1a; color: #ddd; }
   button:active { background: #333; }
-  #brujula { display: inline-block; transition: transform .3s; }
+  #brujula { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
+    transition: transform .3s; transform-origin: 50% 50%; }
+  #brujula svg { width: 100%; height: 100%; display: block; }
   @media (orientation: landscape) {
     .wrap { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr auto; }
     .top { grid-column: 1 / 3; }
@@ -48,7 +50,7 @@
   <div class="grid">
     <div class="card">
       <div class="lbl">Rumbo</div>
-      <div class="val"><span id="brujula">▲</span> <span id="dir">--</span></div>
+      <div class="val"><span id="brujula"><svg viewBox="0 0 100 100"><polygon points="50,4 68,52 50,44 32,52" fill="#ff4500" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><polygon points="32,52 50,44 68,52 50,96" fill="#555" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="48" r="6" fill="#fff"/></svg></span> <span id="dir">--</span></div>
       <div class="sub" id="grados">---°</div>
     </div>
     <div class="card">
@@ -103,6 +105,15 @@ function distancia(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+// Color de la velocidad según km/h
+function colorVel(k) {
+  if (k <= 40) return "#ffffff";   // blanco
+  if (k <= 60) return "#3ddc84";   // verde
+  if (k <= 80) return "#ffd600";   // amarillo
+  if (k <= 130) return "#ff3030";  // rojo
+  return "#c77dff";                // lila
+}
+
 function mostrarRumbo(grados) {
   if (grados == null || isNaN(grados)) return;
   grados = (grados + 360) % 360;
@@ -143,6 +154,7 @@ function onPos(p) {
   if (kmh > maxKmh) maxKmh = kmh;
 
   $("vel").textContent = Math.round(kmh);
+  $("vel").style.color = colorVel(kmh);
   $("max").textContent = Math.round(maxKmh);
   $("dist").textContent = distKm.toFixed(2);
   $("prec").textContent = Math.round(c.accuracy);
