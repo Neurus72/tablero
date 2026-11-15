@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>Tablero Auto - Cómo se usa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d0d; color: #e8e8e8; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px; line-height: 1.5; }
+  .hoja { max-width: 760px; margin: 0 auto; padding: 22px 16px 40px; }
+  h1 { font-size: 28px; line-height: 1.2; }
+  .bajada { color: #ffb300; font-weight: 700; font-size: 19px; margin-top: 4px; }
+  h2 { font-size: 21px; margin: 30px 0 10px; padding-top: 14px; border-top: 1px solid #2a2a2a; display: flex; align-items: center; gap: 10px; }
+  h2 .n { background: #ffb300; color: #000; border-radius: 50%; width: 30px; height: 30px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 17px; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0 8px 22px; }
+  li { margin: 5px 0; }
+  b { color: #fff; }
+  .botones { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 4px; }
+  .botones a { flex: 1 1 200px; text-align: center; text-decoration: none; font-weight: 800; font-size: 18px;
+    padding: 14px; border-radius: 12px; }
+  .ir { background: #1a9e45; color: #fff; }
+  .ver { background: #222; color: #9be7ff; border: 1px solid #444; }
+  .con-foto { display: flex; gap: 16px; align-items: flex-start; margin: 10px 0; }
+  .con-foto img { width: 170px; flex: none; border-radius: 12px; border: 1px solid #333; }
+  .con-foto div { flex: 1; }
+  @media (max-width: 520px) { .con-foto { flex-direction: column; align-items: center; } .con-foto img { width: 62%; } }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 6px; font-weight: 800; font-size: 15px; white-space: nowrap; }
+  .am { background: #ffb300; color: #000; } .ro { background: #ff1a1a; color: #fff; } .az { background: #1565c0; color: #fff; }
+  .ve { background: #1a9e45; color: #fff; } .na { background: #f08a00; color: #000; } .gr { background: #333; color: #ddd; }
+  .nm { background: #ff8c00; color: #000; } .mo { background: #2f8cff; color: #fff; }
+  .ojo { background: #1c1608; border: 1px solid #5a4500; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
+  .colores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; }
+  .colores > div { background: #000; border: 1px solid #333; border-radius: 10px; text-align: center; padding: 8px 2px; }
+  .colores .num { font-size: 30px; font-weight: 800; line-height: 1.1; }
+  .colores .ran { font-size: 13px; color: #bbb; }
+  .pie { margin-top: 34px; color: #888; font-size: 14px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<h1>Tablero Auto</h1>
+<div class="bajada">Avisa las cámaras de velocidad · Evite multas</div>
+<p>Es un velocímetro en el celular que <b>te avisa con voz y con un cartel antes de llegar a una cámara de velocidad</b>,
+y te dice la velocidad máxima. No hay que instalar nada: se abre como una página y usa el GPS del celular.</p>
+
+<div class="botones">
+  <a class="ir" href="../">▶ ABRIR EL TABLERO</a>
+  <a class="ver" href="../simulacion/">Ver cómo avisa (simulación)</a>
+</div>
+
+<h2><span class="n">1</span>Para empezar</h2>
+<ol>
+  <li>Abrí el link en <b>Chrome</b> (Android) o en <b>Safari</b> (iPhone).</li>
+  <li>Cuando pregunte por la <b>ubicación</b>, tocá <b>Permitir</b>. Sin eso no hay GPS.</li>
+  <li><b>Tocá la pantalla una vez.</b> Ese toque habilita la voz y el pitido (el celular no deja hablar hasta que se lo toca).
+    En el iPhone además pregunta por "movimiento y orientación": tocá <b>Permitir</b>.</li>
+  <li>Arriba a la izquierda tiene que decir <span class="chip ve">● GPS OK</span>. Listo: ya avisa.</li>
+</ol>
+
+<h2><span class="n">2</span>Los colores de la velocidad</h2>
+<p>Los números grandes de la velocidad <b>cambian de color</b> según lo rápido que vas, para darte cuenta de un vistazo:</p>
+<div class="colores">
+  <div><div class="num" style="color:#ffffff">35</div><div class="ran">hasta 40</div></div>
+  <div><div class="num" style="color:#3ddc84">55</div><div class="ran">40 a 60</div></div>
+  <div><div class="num" style="color:#ffd600">75</div><div class="ran">60 a 80</div></div>
+  <div><div class="num" style="color:#ff3030">110</div><div class="ran">80 a 130</div></div>
+  <div><div class="num" style="color:#c77dff">140</div><div class="ran">más de 130</div></div>
+</div>
+<p><b>Blanco</b> hasta 40 km/h, <b style="color:#3ddc84">verde</b> de 40 a 60, <b style="color:#ffd600">amarillo</b> de 60 a 80,
+  <b style="color:#ff3030">rojo</b> de 80 a 130 y <b style="color:#c77dff">lila</b> arriba de 130.</p>
+<p>Ojo: esos colores son <b>siempre los mismos</b>, haya o no cámara. La velocidad máxima de cada cámara la dice el
+  <b>cartel de arriba</b> (punto 3).</p>
+
+<h2><span class="n">3</span>Los avisos de cámaras</h2>
+<div class="con-foto">
+  <img src="cap_amarillo.png" alt="Cartel amarillo: cámara a 520 m, máxima 120, RP 2, El Mirador">
+  <div>
+    <p>Unos <b>30 segundos antes</b> de llegar a una cámara aparece un <span class="chip am">cartel amarillo</span> con:</p>
+    <ul>
+      <li>a cuántos metros está,</li>
+      <li>la <b>velocidad máxima</b> (en el círculo),</li>
+      <li>la ruta y el lugar (por ejemplo <b>RP 2 · El Mirador</b>).</li>
+    </ul>
+    <p>Y la voz dice: <i>"Cámara de velocidad en El Mirador, a 500 metros. Máxima 120"</i>.</p>
+  </div>
+</div>
+<div class="con-foto">
+  <img src="cap_rojo.png" alt="Cartel rojo: bajá la velocidad, máxima 80">
+  <div>
+    <p>Si vas <b>más rápido que la máxima</b>, el cartel se pone <span class="chip ro">rojo y titila</span>, suena un pitido
+      y la voz dice <i>"Bajá la velocidad"</i>. Cuando bajás, vuelve a amarillo.</p>
+    <p>Cuando pasás la cámara, el cartel desaparece solo.</p>
+    <p>Solo avisa las cámaras que están <b>adelante</b>, en el sentido en que vas, y andando a más de 10 km/h.</p>
+  </div>
+</div>
+
+<h2><span class="n">4</span>El viaje</h2>
+<p>El botón grande de abajo a la derecha maneja los datos del viaje (distancia, máxima, promedio y tiempo):</p>
+<ul>
+  <li><span class="chip ve">▶ INICIAR VIAJE</span> empieza a contar.</li>
+  <li><span class="chip na">↻ REINICIAR VIAJE</span> aparece con el viaje en marcha. Tocándolo se pone
+    <span class="chip ro">rojo</span>: <b>tocá el rojo</b> para poner todo en cero. Si no lo tocás, en 4 segundos vuelve a naranja
+    (así un toque sin querer no borra nada).</li>
+</ul>
+<p>Los avisos de cámaras andan aunque no inicies el viaje.</p>
+
+<h2><span class="n">5</span>¿Pasaste una cámara que no avisó? Avisanos</h2>
+<div class="con-foto">
+  <img src="cap_ventana.png" alt="Ventana: cámara fija, control móvil, me equivoqué">
+  <div>
+    <ol>
+      <li>Tocá el botón azul <span class="chip az">📷 AVISAR CÁMARA</span>. En ese momento ya queda anotado el lugar.</li>
+      <li>Elegí qué viste:
+        <ul>
+          <li><span class="chip nm">CÁMARA FIJA</span>: una cámara o medidor de velocidad que está siempre.</li>
+          <li><span class="chip mo">CONTROL MÓVIL</span>: radar de policía o de tránsito puesto ese día.</li>
+          <li><span class="chip gr">ME EQUIVOQUÉ, NO MANDAR</span>: no se manda nada.</li>
+        </ul>
+      </li>
+      <li>La voz dice <i>"Gracias, cámara anotada"</i>. Si no elegís nada, a los 10 segundos se manda igual.</li>
+    </ol>
+    <p><b>Sin señal no importa:</b> el aviso queda guardado en el celular y se manda solo cuando vuelve la señal.</p>
+    <p>Cada aviso <b>se revisa</b> antes de sumar la cámara a la lista para todos.</p>
+  </div>
+</div>
+<div class="ojo">✋ <b>Manejando, solo un toque.</b> Si vas con acompañante, que lo haga él. Nunca te distraigas del camino.</div>
+
+<h2><span class="n">6</span>Consejos</h2>
+<ul>
+  <li><b>La página tiene que estar en pantalla.</b> Si entra una llamada, abrís WhatsApp o se apaga la pantalla, el tablero
+    queda en pausa y <b>no avisa</b>. Al volver sigue solo.</li>
+  <li>La pantalla se mantiene encendida sola. Igual conviene tener el <b>cargador</b> puesto en viajes largos.</li>
+  <li>Poné el celular en un <b>soporte</b> y con el <b>volumen</b> alto. En el iPhone, con la llave de silencio puesta el pitido puede no sonar.</li>
+  <li>Si la página se recarga o la cerrás, los datos del viaje vuelven a cero (los avisos de cámaras siguen andando).</li>
+</ul>
+
+<h2><span class="n">7</span>Tener en cuenta</h2>
+<ul>
+  <li><b>No están todas las cámaras</b>, y alguna puede haber cambiado o ya no estar. Por eso es tan útil que nos avises las que faltan.</li>
+  <li>Algunas cámaras no tienen cargada la máxima: el cartel dice <i>"Sin dato de velocidad máxima"</i>.</li>
+  <li>El tablero es una ayuda. <b>Respetá siempre las velocidades y las señales de la ruta.</b></li>
+</ul>
+
+<div class="botones">
+  <a class="ir" href="../">▶ ABRIR EL TABLERO</a>
+</div>
+<p class="pie">Tablero Auto · Cámaras en rutas Argentinas · Evite multas</p>
+</div>
+</body>
+</html>
