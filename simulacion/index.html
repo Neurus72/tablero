@@ -29,6 +29,17 @@
   #btnViaje.verde { background: #1a9e45; }
   #btnViaje.naranja { background: #f08a00; color: #000; }
   #btnViaje.rojo { background: #e00000; }
+  /* v6: botón y ventana para avisar una cámara que el tablero no conocía */
+  #btnAviso { flex: 0.8; font-size: 17px; font-weight: 800; padding: 14px 8px; background: #1565c0; color: #fff; border: none; }
+  #aviso { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
+    flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; padding: 20px; text-align: center; }
+  #aviso.on { display: flex; }
+  #aviso .tit { font-size: 7vmin; font-weight: 800; }
+  #aviso .sub { font-size: 4.5vmin; color: #bbb; }
+  #aviso button { flex: none; font-size: 7vmin; font-weight: 800; padding: 5vmin 10px; border: none; border-radius: 14px; }
+  #av-fija { background: #ff8c00; color: #000; }
+  #av-movil { background: #2f8cff; color: #fff; }
+  #av-cancelar { background: #333; color: #ddd; font-size: 5vmin !important; padding: 3vmin !important; }
   #brujula { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
     transition: transform .3s; transform-origin: 50% 50%; }
   #brujula svg { width: 100%; height: 100%; display: block; }
@@ -69,6 +80,14 @@
     <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
     <div class="max" id="cam-max">--</div></div>
 
+  <div id="aviso">
+    <div class="tit">📷 ¿Qué viste?</div>
+    <div class="sub" id="av-sub">Ya quedó anotado el lugar</div>
+    <button id="av-fija">CÁMARA FIJA</button>
+    <button id="av-movil">CONTROL MÓVIL<br><span style="font-size:4vmin;font-weight:600">(radar de policía o tránsito)</span></button>
+    <button id="av-cancelar">ME EQUIVOQUÉ, NO MANDAR</button>
+  </div>
+
   <div class="vel">
     <div class="num" id="vel">0</div>
     <div class="uni">km/h</div>
@@ -108,6 +127,7 @@
   </div>
 
   <div class="btns">
+    <button id="btnAviso">📷 AVISAR CÁMARA</button>
     <button id="btnViaje" class="verde">▶ INICIAR VIAJE</button>
   </div>
 </div>
@@ -121,7 +141,8 @@ let ultimo = null;        // último punto válido
 let distKm = 0, maxKmh = 0;
 let tMov = 0;             // segundos en movimiento
 let inicio = Date.now();
-let viajeOn = false;      // v5: la distancia, máxima, promedio y tiempo cuentan sólo con el viaje iniciado
+let viajeOn = false;
+let ultimoFix = null;     // v6: última posición del GPS      // v5: la distancia, máxima, promedio y tiempo cuentan sólo con el viaje iniciado
 let rumboGps = null;      // rumbo por GPS cuando hay movimiento
 let velActual = 0;
 
@@ -175,12 +196,16 @@ function onPos(p) {
     }
   }
   ultimo = punto;
+  // v6: última posición, para el botón AVISAR CÁMARA
+  ultimoFix = { la: c.latitude, lo: c.longitude, prec: c.accuracy, t: ahora,
+    rumbo: (c.heading != null && !isNaN(c.heading) && (c.speed || 0) * 3.6 > 5) ? c.heading : null };
 
   kmh = kmh || 0;
   if (kmh < 2) kmh = 0;   // filtra el "ruido" estando parado
   velActual = kmh;
   if (viajeOn && kmh > maxKmh) maxKmh = kmh;
 
+  if (ultimoFix) ultimoFix.kmh = kmh;
   $("vel").textContent = Math.round(kmh);
   $("vel").style.color = colorVel(kmh);
   $("max").textContent = Math.round(maxKmh);
@@ -223,6 +248,102 @@ if ("ondeviceorientationabsolute" in window) {
   window.addEventListener("deviceorientationabsolute", onOrient);
 } else {
   window.addEventListener("deviceorientation", onOrient);
+}
+
+// ===== v6: AVISAR UNA CÁMARA QUE NO ESTABA EN LA LISTA =====
+// Un toque guarda el lugar; después se elige FIJA / MÓVIL (si no se elige en 10 s se manda "sin tipo").
+// Los avisos van a una cola en el celular y se mandan cuando hay señal (en la ruta se corta seguido).
+const AVISOS_URL = "https://tablero-avisos.gps-moto.workers.dev/aviso";
+const AVISO_SEG = 10;
+let avisoPend = null, avisoTimer = null, avisoEnviando = false;
+
+function leerLS(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function guardarLS(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function aparatoId() {   // número al azar de este celular (no identifica a la persona)
+  let a = leerLS("tab_aparato");
+  if (!a) { a = Math.random().toString(36).slice(2, 12); guardarLS("tab_aparato", a); }
+  return a;
+}
+function colaLeer() { try { return JSON.parse(leerLS("tab_avisos_cola") || "[]"); } catch (e) { return []; } }
+function colaGuardar(c) { guardarLS("tab_avisos_cola", JSON.stringify(c)); }
+
+function camCercana(la, lo) {   // la cámara de la lista más cercana (a menos de 2 km), en texto
+  if (typeof CAMARAS === "undefined") return "";
+  let mejor = null, md = 2000;
+  for (let i = 0; i < CAMARAS.length; i++) {
+    const k = CAMARAS[i];
+    if (Math.abs(k[0] - la) > 0.02 || Math.abs(k[1] - lo) > 0.025) continue;
+    const d = distancia({ lat: la, lon: lo }, { lat: k[0], lon: k[1] }) * 1000;
+    if (d < md) { md = d; mejor = k; }
+  }
+  if (!mejor) return "";
+  return Math.round(md) + " m" + (mejor[2] ? " · máx. " + mejor[2] : "") + (mejor[4] ? " · " + mejor[4] : "") + (mejor[3] ? " · " + mejor[3] : "");
+}
+
+$("btnAviso").onclick = () => {
+  if (!ultimoFix || Date.now() - ultimoFix.t > 30000) { decir("Todavía no hay GPS"); alertaCorta("Todavía no hay GPS: probá en un momento"); return; }
+  const f = ultimoFix;
+  avisoPend = { id: aparatoId() + "-" + Date.now().toString(36), t: Math.round(f.t / 1000), la: f.la, lo: f.lo,
+    rumbo: f.rumbo, kmh: Math.round(f.kmh || 0), prec: Math.round(f.prec), tipo: "?", ap: aparatoId(), cerca: camCercana(f.la, f.lo) };
+  $("aviso").className = "on";
+  let quedan = AVISO_SEG;
+  $("av-sub").textContent = "Ya quedó anotado el lugar · " + quedan;
+  clearInterval(avisoTimer);
+  avisoTimer = setInterval(() => {
+    quedan--;
+    $("av-sub").textContent = "Ya quedó anotado el lugar · " + quedan;
+    if (quedan <= 0) avisoCerrar("?");
+  }, 1000);
+};
+function avisoCerrar(tipo) {
+  clearInterval(avisoTimer);
+  $("aviso").className = "";
+  if (!avisoPend) return;
+  if (tipo && typeof SIMULACION !== "undefined") {   // en la simulación no se manda nada de verdad
+    decir("Gracias. En la simulación no se manda"); avisoPend = null; return;
+  }
+  if (tipo) {
+    avisoPend.tipo = tipo;
+    const c = colaLeer(); c.push(avisoPend); colaGuardar(c);
+    decir("Gracias, cámara anotada");
+    avisoMandar();
+  }
+  avisoPend = null;
+}
+$("av-fija").onclick = () => avisoCerrar("fija");
+$("av-movil").onclick = () => avisoCerrar("movil");
+$("av-cancelar").onclick = () => avisoCerrar(null);
+
+async function avisoMandar() {
+  if (avisoEnviando) return;
+  const c = colaLeer();
+  if (!c.length) return;
+  avisoEnviando = true;
+  for (const a of c) {
+    let ok = false;
+    try {
+      const ctl = new AbortController(), corte = setTimeout(() => ctl.abort(), 15000);
+      const r = await fetch(AVISOS_URL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(a), signal: ctl.signal });
+      clearTimeout(corte);
+      ok = r.ok || r.status === 400;   // 400 = dato malo: no se reintenta
+    } catch (e) {}
+    if (!ok) break;   // sin señal: se reintenta más tarde
+    colaGuardar(colaLeer().filter(x => x.id !== a.id));
+  }
+  avisoEnviando = false;
+}
+setInterval(avisoMandar, 30000);
+window.addEventListener("online", avisoMandar);
+setTimeout(avisoMandar, 3000);
+
+let alertaTimer = null;
+function alertaCorta(t) {   // cartelito abajo por 3 s (no se usa alert(): en la ruta molesta)
+  let e = $("alerta");
+  if (!e) { e = document.createElement("div"); e.id = "alerta";
+    e.style.cssText = "position:fixed;left:16px;right:16px;bottom:90px;z-index:40;background:#333;color:#fff;border-radius:10px;padding:12px;text-align:center;font-size:18px";
+    document.body.appendChild(e); }
+  e.textContent = t; e.style.display = "block";
+  clearTimeout(alertaTimer); alertaTimer = setTimeout(() => { e.style.display = "none"; }, 3000);
 }
 
 // ===== v2: AVISO DE CÁMARAS DE VELOCIDAD =====

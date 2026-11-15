@@ -1,4 +1,5 @@
 // SIMULACIÓN: un auto por la Ruta 2 hacia Chascomús. Reemplaza el GPS del celular.
+window.SIMULACION = true;   // v6: el botón AVISAR CÁMARA no manda nada desde la simulación
 (function(){
   const CAMS = [[-35.34343,-58.04990],[-35.42651,-58.04962],[-35.51097,-58.02383],[-35.51479,-58.02253],[-35.53139,-58.00814],[-35.53981,-57.99581]];
   let CAMS_KM = [];   // dónde quedan las cámaras sobre el recorrido (se calcula al cargar)
