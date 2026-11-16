@@ -1,6 +1,6 @@
 {
-  "name": "Tablero Auto",
-  "short_name": "Tablero",
+  "name": "InfoCam",
+  "short_name": "InfoCam",
   "description": "Velocidad y aviso de cámaras con el GPS del celular",
   "id": "./",
   "start_url": "./",

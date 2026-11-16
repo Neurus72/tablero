@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <meta name="theme-color" content="#000000">
-<title>Tablero Auto</title>
+<title>InfoCam</title>
 <!-- v7: se puede instalar (ícono en el celular). Android: manifest + sw.js. iPhone: las líneas apple-. -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
@@ -12,7 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Tablero">
+<meta name="apple-mobile-web-app-title" content="InfoCam">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #000; color: #e8e8e8;
@@ -97,9 +97,9 @@
 </style>
 </head>
 <body>
-<div id="inst-franja"><span class="t" id="inst-abrir">📲 INSTALAR EL TABLERO</span><span class="x" id="inst-x">✕</span></div>
+<div id="inst-franja"><span class="t" id="inst-abrir">📲 INSTALAR INFOCAM</span><span class="x" id="inst-x">✕</span></div>
 <div id="inst">
-  <div class="tit">📲 INSTALAR EL TABLERO</div>
+  <div class="tit">📲 INSTALAR INFOCAM</div>
   <div class="pasos" id="inst-pasos"></div>
   <div class="url" id="inst-url"></div>
   <button id="inst-copiar">COPIAR LINK</button>
@@ -580,7 +580,7 @@ function instPintar() {
 window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); instEv = e; instPintar(); });
 window.addEventListener("appinstalled", function () {
   instEv = null; document.body.classList.remove("coninst");
-  decir("Listo. Desde ahora abrí el tablero con el ícono.");
+  decir("Listo. Desde ahora abrí InfoCam con el ícono.");
 });
 const ICONO_COMPARTIR = '<svg class="compartir" viewBox="0 0 24 24" fill="none" stroke="#2f8cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>';
 function instPasos() {
@@ -592,21 +592,21 @@ function instPasos() {
              "<p>Si no aparece: tocá <b>COPIAR LINK</b>, abrí <b>Safari</b> y pegalo arriba.</p>";
     return "<p>1. Tocá <b>Compartir</b> " + ICONO_COMPARTIR + " (el cuadrado con la flecha: abajo en el iPhone, arriba en el iPad).</p>" +
            "<p>2. Bajá y tocá <b>Agregar a inicio</b> (o <b>Agregar a pantalla de inicio</b>).</p>" +
-           "<p>3. Tocá <b>Agregar</b>. Queda el ícono <b>Tablero</b>: desde ahora abrilo desde ahí.</p>" +
+           "<p>3. Tocá <b>Agregar</b>. Queda el ícono <b>InfoCam</b>: desde ahora abrilo desde ahí.</p>" +
            "<p>Si no ves Compartir (link abierto desde WhatsApp): tocá la brújula de <b>Safari</b> abajo a la derecha y hacelo ahí.</p>";
   }
   if (/SamsungBrowser/.test(ua))
     return "<p>1. Tocá las <b>tres rayitas ≡</b> abajo a la derecha.</p><p>2. <b>Agregar página a</b> → <b>Pantalla de inicio</b>.</p>" +
-           "<p>3. Desde ahora abrilo con el ícono <b>Tablero</b>.</p>";
+           "<p>3. Desde ahora abrilo con el ícono <b>InfoCam</b>.</p>";
   if (/MiuiBrowser|XiaoMi|HeyTap|Opera|OPR\//.test(ua))
     return "<p>Este navegador no deja el ícono bien. Abrilo en <b>Chrome</b>: tocá <b>COPIAR LINK</b>, abrí Chrome y pegalo arriba.</p>";
   if (/; wv\)|WhatsApp|FBAN|FBAV|Instagram/.test(ua))
     return "<p>Estás adentro de otra app (WhatsApp, Facebook…). Tocá los tres puntitos <b>⋮</b> arriba → <b>Abrir en Chrome</b>.</p>" +
-           "<p>Ahí tocá la franja celeste <b>INSTALAR EL TABLERO</b>.</p>";
+           "<p>Ahí tocá la franja celeste <b>INSTALAR INFOCAM</b>.</p>";
   if (/Firefox/.test(ua)) return "<p>Tocá los tres puntitos <b>⋮</b> → <b>Instalar</b>.</p>";
   return "<p>1. Si arriba dice <b>WhatsApp</b> o hay una <b>X</b> a la izquierda: tocá <b>⋮</b> → <b>Abrir en Chrome</b>.</p>" +
          "<p>2. En Chrome: los tres puntitos <b>⋮</b> arriba a la derecha → <b>Instalar aplicación</b> (o <b>Agregar a pantalla principal</b>).</p>" +
-         "<p>3. Desde ahora abrilo con el ícono <b>Tablero</b>.</p>";
+         "<p>3. Desde ahora abrilo con el ícono <b>InfoCam</b>.</p>";
 }
 $("inst-abrir").onclick = function () {
   if (instEv) {                                   // Android: la ventanita de instalar, de un toque
