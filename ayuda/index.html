@@ -24,6 +24,8 @@
     padding: 14px; border-radius: 12px; }
   .ir { background: #1a9e45; color: #fff; }
   .ver { background: #222; color: #9be7ff; border: 1px solid #444; }
+  .pdf { background: #1565c0; color: #fff; }   /* v9: listas en PDF */
+  .pdf small { display: block; font-weight: 600; font-size: 14px; opacity: .85; }
   .con-foto { display: flex; gap: 16px; align-items: flex-start; margin: 10px 0; }
   .con-foto img { width: 170px; flex: none; border-radius: 12px; border: 1px solid #333; }
   .con-foto div { flex: 1; }
@@ -145,6 +147,15 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
   <li>Algunas cámaras no tienen cargada la máxima: el cartel dice <i>"Sin dato de velocidad máxima"</i>.</li>
   <li>InfoCam es una ayuda. <b>Respetá siempre las velocidades y las señales de la ruta.</b></li>
 </ul>
+
+<h2><span class="n">8</span>Las cámaras en una lista (PDF)</h2>
+<p>Las mismas cámaras que avisa InfoCam, en dos listas para mirar antes de salir, imprimir o pasar por WhatsApp.
+En cada cámara, tocando la ubicación se abre en <b>Google Maps</b>.</p>
+<div class="botones">
+  <a class="pdf" href="../InfoCam_Camaras_en_Rutas_Argentina.pdf">📄 POR RUTA<small>para el que viaja: provincia → ruta</small></a>
+  <a class="pdf" href="../InfoCam_Camaras_por_Municipio.pdf">📄 POR MUNICIPIO<small>para la ciudad: partido → localidad</small></a>
+</div>
+<p>Para encontrar una ruta, un partido o una localidad, buscala con la <b>lupa</b> del lector de PDF.</p>
 
 <div class="botones">
   <a class="ir" href="../">▶ ABRIR INFOCAM</a>
