@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <meta name="theme-color" content="#000000">
 <title>Tablero Auto</title>
+<!-- v7: se puede instalar (ícono en el celular). Android: manifest + sw.js. iPhone: las líneas apple-. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icono-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Tablero">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #000; color: #e8e8e8;
@@ -59,6 +67,26 @@
     border: 2.2vmin solid #e00000; display: flex; align-items: center; justify-content: center;
     font-size: 8vmin; font-weight: 800; flex: none; }
   #sonido { color: #ffb300; }
+  /* v7: franja celeste INSTALAR (sólo si no se abrió desde el ícono) y ventana con los pasos */
+  #inst-franja { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 20; background: #00b7ff; color: #000;
+    font-size: 17px; font-weight: 800; padding: 0 0 0 12px; align-items: center; height: 46px; }
+  body.coninst #inst-franja { display: flex; }
+  body.coninst .wrap { padding-top: 56px; }
+  body.coninst #cam { top: 80px; }
+  #inst-franja .t { flex: 1; }
+  #inst-franja .x { width: 50px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  #inst { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(0,0,0,.94);
+    flex-direction: column; justify-content: center; gap: 14px; padding: 20px; overflow-y: auto; }
+  #inst.on { display: flex; }
+  #inst .tit { font-size: 24px; font-weight: 800; color: #00b7ff; text-align: center; }
+  #inst .pasos { font-size: 19px; line-height: 1.45; }
+  #inst .pasos p { margin: 8px 0; }
+  #inst .pasos b { color: #fff; }
+  #inst .url { font-size: 15px; color: #9be7ff; word-break: break-all; text-align: center; user-select: all; -webkit-user-select: all; }
+  #inst button { flex: none; font-size: 20px; font-weight: 800; padding: 14px; border: none; }
+  #inst-copiar { background: #00b7ff; color: #000; }
+  #inst-cerrar { background: #333; color: #ddd; }
+  .compartir { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; }
   @media (orientation: landscape) {
     .wrap { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr auto; }
     .top { grid-column: 1 / 3; }
@@ -69,6 +97,14 @@
 </style>
 </head>
 <body>
+<div id="inst-franja"><span class="t" id="inst-abrir">📲 INSTALAR EL TABLERO</span><span class="x" id="inst-x">✕</span></div>
+<div id="inst">
+  <div class="tit">📲 INSTALAR EL TABLERO</div>
+  <div class="pasos" id="inst-pasos"></div>
+  <div class="url" id="inst-url"></div>
+  <button id="inst-copiar">COPIAR LINK</button>
+  <button id="inst-cerrar">CERRAR</button>
+</div>
 <div class="wrap">
   <div class="top">
     <span id="estado" class="estado esp">● Esperando GPS…</span>
@@ -522,6 +558,82 @@ $("btnViaje").onclick = () => {
     botonViaje("naranja", "↻ REINICIAR VIAJE");
   }
 };
+
+// ── v7: INSTALAR (dejar el ícono en el celular) ──
+// Si se abrió desde el ícono no se muestra nada. Si no, la franja celeste de arriba:
+//  - Android con Chrome o Samsung Internet: un toque abre la ventanita de Android "Instalar" (beforeinstallprompt).
+//  - Si el navegador no deja (iPhone, Xiaomi, adentro de WhatsApp…): ventana con los pasos según el aparato.
+const URL_TABLERO = location.origin + location.pathname;
+let instEv = null;
+function esIphone() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+function esCelular() { return esIphone() || /Android|Mobile/.test(navigator.userAgent); }
+function instalado() {
+  return navigator.standalone === true || matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches;
+}
+function instCerradaHoy() { try { return sessionStorage.getItem("tab_inst_x") === "1"; } catch (e) { return false; } }
+function instPintar() {
+  const ver = !instalado() && !instCerradaHoy() && (esCelular() || instEv);
+  document.body.classList.toggle("coninst", !!ver);
+}
+window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); instEv = e; instPintar(); });
+window.addEventListener("appinstalled", function () {
+  instEv = null; document.body.classList.remove("coninst");
+  decir("Listo. Desde ahora abrí el tablero con el ícono.");
+});
+const ICONO_COMPARTIR = '<svg class="compartir" viewBox="0 0 24 24" fill="none" stroke="#2f8cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>';
+function instPasos() {
+  const ua = navigator.userAgent;
+  if (esIphone()) {
+    if (/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua))
+      return "<p>1. Tocá <b>Compartir</b> " + ICONO_COMPARTIR + " (arriba a la derecha).</p>" +
+             "<p>2. Bajá y tocá <b>Agregar a inicio</b> → <b>Agregar</b>.</p>" +
+             "<p>Si no aparece: tocá <b>COPIAR LINK</b>, abrí <b>Safari</b> y pegalo arriba.</p>";
+    return "<p>1. Tocá <b>Compartir</b> " + ICONO_COMPARTIR + " (el cuadrado con la flecha: abajo en el iPhone, arriba en el iPad).</p>" +
+           "<p>2. Bajá y tocá <b>Agregar a inicio</b> (o <b>Agregar a pantalla de inicio</b>).</p>" +
+           "<p>3. Tocá <b>Agregar</b>. Queda el ícono <b>Tablero</b>: desde ahora abrilo desde ahí.</p>" +
+           "<p>Si no ves Compartir (link abierto desde WhatsApp): tocá la brújula de <b>Safari</b> abajo a la derecha y hacelo ahí.</p>";
+  }
+  if (/SamsungBrowser/.test(ua))
+    return "<p>1. Tocá las <b>tres rayitas ≡</b> abajo a la derecha.</p><p>2. <b>Agregar página a</b> → <b>Pantalla de inicio</b>.</p>" +
+           "<p>3. Desde ahora abrilo con el ícono <b>Tablero</b>.</p>";
+  if (/MiuiBrowser|XiaoMi|HeyTap|Opera|OPR\//.test(ua))
+    return "<p>Este navegador no deja el ícono bien. Abrilo en <b>Chrome</b>: tocá <b>COPIAR LINK</b>, abrí Chrome y pegalo arriba.</p>";
+  if (/; wv\)|WhatsApp|FBAN|FBAV|Instagram/.test(ua))
+    return "<p>Estás adentro de otra app (WhatsApp, Facebook…). Tocá los tres puntitos <b>⋮</b> arriba → <b>Abrir en Chrome</b>.</p>" +
+           "<p>Ahí tocá la franja celeste <b>INSTALAR EL TABLERO</b>.</p>";
+  if (/Firefox/.test(ua)) return "<p>Tocá los tres puntitos <b>⋮</b> → <b>Instalar</b>.</p>";
+  return "<p>1. Si arriba dice <b>WhatsApp</b> o hay una <b>X</b> a la izquierda: tocá <b>⋮</b> → <b>Abrir en Chrome</b>.</p>" +
+         "<p>2. En Chrome: los tres puntitos <b>⋮</b> arriba a la derecha → <b>Instalar aplicación</b> (o <b>Agregar a pantalla principal</b>).</p>" +
+         "<p>3. Desde ahora abrilo con el ícono <b>Tablero</b>.</p>";
+}
+$("inst-abrir").onclick = function () {
+  if (instEv) {                                   // Android: la ventanita de instalar, de un toque
+    const e = instEv; instEv = null;
+    e.prompt();
+    e.userChoice.then(function () { instPintar(); }, function () {});
+    return;
+  }
+  $("inst-pasos").innerHTML = instPasos();
+  $("inst-url").textContent = URL_TABLERO;
+  $("inst").classList.add("on");
+};
+$("inst-x").onclick = function () {
+  try { sessionStorage.setItem("tab_inst_x", "1"); } catch (e) {}   // vuelve a aparecer la próxima vez que se abra
+  instPintar();
+};
+$("inst-cerrar").onclick = function () { $("inst").classList.remove("on"); };
+$("inst-copiar").onclick = function () {
+  function ok() { $("inst-copiar").textContent = "✓ COPIADO: pegalo en el navegador"; }
+  function mal() { $("inst-copiar").textContent = "Mantené apretado el link de arriba para copiarlo"; }
+  try {
+    if (navigator.clipboard) navigator.clipboard.writeText(URL_TABLERO).then(ok, mal); else mal();
+  } catch (e) { mal(); }
+  setTimeout(function () { $("inst-copiar").textContent = "COPIAR LINK"; }, 5000);
+};
+instPintar();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 </script>
 </body>
 </html>
