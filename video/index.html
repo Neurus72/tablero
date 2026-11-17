@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>InfoCam - Video</title>
+<!-- v10: VERSIÓN PARA GRABAR EL VIDEO DE YOUTUBE ("Evitemos multas entre todos").
+     Es la simulación de la Ruta 2 en formato celular (vertical), con carteles que explican lo que pasa
+     y un dedito que toca los botones. Todo se mide en "u" = 1% del ancho del celular dibujado. -->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; color: #e8e8e8;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  /* El "celular": 9 de ancho por 16 de alto, centrado en la pantalla de la PC */
+  #marco { --u: 4px; position: relative; overflow: hidden; background: #000;
+    width: calc(var(--u) * 100); height: calc(var(--u) * 177.78);
+    display: flex; flex-direction: column; gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 2.2); }
+  .top { display: flex; justify-content: space-between; font-size: calc(var(--u) * 3.2); color: #888; }
+  .estado.ok { color: #3ddc84; } .estado.mal { color: #ff5252; } .estado.esp { color: #ffb300; }
+
+  /* Lugar del cartel de cámara (cuando no hay cámara se ve el dato de la simulación) */
+  #slot { position: relative; height: calc(var(--u) * 22); flex: none; }
+  #siminfo { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center;
+    justify-content: center; text-align: center; font-size: calc(var(--u) * 3.4); color: #9be7ff; line-height: 1.35; }
+  #cam { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 5;
+    background: #ffb300; color: #000; border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 2) calc(var(--u) * 3);
+    align-items: center; gap: calc(var(--u) * 3); box-shadow: 0 4px 20px rgba(0,0,0,.6); }
+  #cam.on { display: flex; }
+  #cam.pasado { background: #ff1a1a; color: #fff; animation: titila .6s infinite alternate; }
+  @keyframes titila { from { opacity: 1; } to { opacity: .55; } }
+  #cam .ico { font-size: calc(var(--u) * 10); line-height: 1; }
+  #cam .txt { flex: 1; }
+  #cam .t1 { font-size: calc(var(--u) * 5.4); font-weight: 800; white-space: nowrap; }
+  #cam .t2 { font-size: calc(var(--u) * 4.4); font-weight: 600; }
+  #cam .t3 { font-size: calc(var(--u) * 4); font-weight: 700; margin-top: 2px; opacity: .85; }
+  #cam .max { width: calc(var(--u) * 18); height: calc(var(--u) * 18); border-radius: 50%; background: #fff; color: #000;
+    border: calc(var(--u) * 2) solid #e00000; display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--u) * 7.5); font-weight: 800; flex: none; }
+
+  /* Velocidad con la BARRA DE REFERENCIA de colores arriba (fija; los que cambian de color son los números) */
+  .vel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
+  #barra { display: flex; width: 94%; gap: calc(var(--u) * 0.8); margin-bottom: calc(var(--u) * 1.5); }
+  #barra div { flex: 1; text-align: center; font-size: calc(var(--u) * 3.1); color: #ccc; font-weight: 600; }
+  #barra i { display: block; height: calc(var(--u) * 2.4); border-radius: calc(var(--u) * 1.2); margin-bottom: calc(var(--u) * 0.8); }
+  .vel .num { font-size: calc(var(--u) * 28); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
+  .vel .uni { font-size: calc(var(--u) * 4.2); color: #888; }
+
+  /* Cuadros: 2 columnas, letra grande para que se lea en el video */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: calc(var(--u) * 1.6); }
+  .card { background: #111; border: 1px solid #2a2a2a; border-radius: calc(var(--u) * 2.4); padding: calc(var(--u) * 0.8);
+    text-align: center; display: flex; flex-direction: column; justify-content: center; transition: border-color .3s, box-shadow .3s; }
+  .card .lbl { font-size: calc(var(--u) * 3); color: #aaa; text-transform: uppercase; letter-spacing: .5px; }
+  .card .val { font-size: calc(var(--u) * 7); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .card .sub { font-size: calc(var(--u) * 2.9); color: #888; }
+  .card.marca { border-color: #9be7ff; box-shadow: 0 0 0 calc(var(--u) * 0.8) rgba(155,231,255,.45); }
+  /* Brújula más grande */
+  #brujula { display: inline-block; width: 1.6em; height: 1.6em; vertical-align: -0.45em;
+    transition: transform .3s; transform-origin: 50% 50%; }
+  #brujula svg { width: 100%; height: 100%; display: block; }
+
+  /* Franja de explicación (el texto del video) */
+  #narra { flex: none; height: calc(var(--u) * 19); position: relative; z-index: 35; background: #9be7ff; color: #000; border-radius: calc(var(--u) * 2.4);
+    display: flex; align-items: center; justify-content: center; text-align: center; padding: calc(var(--u) * 1.5) calc(var(--u) * 3);
+    font-size: calc(var(--u) * 4.1); font-weight: 700; line-height: 1.3; transition: opacity .35s; opacity: 0; }
+  #narra.on { opacity: 1; }
+  #narra .am { background: #ffb300; padding: 0 .25em; border-radius: .2em; }
+  #narra .ro { background: #ff1a1a; color: #fff; padding: 0 .25em; border-radius: .2em; }
+  #narra .az { background: #1565c0; color: #fff; padding: 0 .25em; border-radius: .2em; }
+  #narra .ve { background: #1a9e45; color: #fff; padding: 0 .25em; border-radius: .2em; }
+
+  .btns { display: flex; gap: calc(var(--u) * 2); flex: none; }
+  button { flex: 1; padding: calc(var(--u) * 2.8) calc(var(--u) * 1); font-size: calc(var(--u) * 3.9); font-weight: 800; white-space: nowrap;
+    border-radius: calc(var(--u) * 2.4); border: none; color: #fff; font-family: inherit; }
+  #btnViaje.verde { background: #1a9e45; }
+  #btnViaje.naranja { background: #f08a00; color: #000; }
+  #btnViaje.rojo { background: #e00000; }
+  #btnAviso { flex: 0.85; background: #1565c0; }
+
+  /* Ventana de AVISAR CÁMARA (como en la app) */
+  #aviso { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
+    flex-direction: column; align-items: stretch; justify-content: center; gap: calc(var(--u) * 3.5); padding: calc(var(--u) * 5); text-align: center; }
+  #aviso.on { display: flex; }
+  #aviso .tit { font-size: calc(var(--u) * 7); font-weight: 800; }
+  #aviso .sub { font-size: calc(var(--u) * 4.5); color: #bbb; }
+  #aviso button { flex: none; white-space: normal; font-size: calc(var(--u) * 6.5); padding: calc(var(--u) * 5) calc(var(--u) * 2); border-radius: calc(var(--u) * 3.5); }
+  #av-fija { background: #ff8c00; color: #000; }
+  #av-movil { background: #2f8cff; color: #fff; }
+  #av-cancelar { background: #333; color: #ddd; font-size: calc(var(--u) * 4.5) !important; padding: calc(var(--u) * 3) !important; }
+
+  /* Dedito que toca los botones */
+  #mano { position: absolute; z-index: 60; font-size: calc(var(--u) * 15); line-height: 1; pointer-events: none;
+    left: 110%; top: 110%; transition: left .9s ease-in-out, top .9s ease-in-out, transform .15s;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); }
+  #mano.aprieta { transform: scale(.82); }
+  .onda { position: absolute; z-index: 59; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+    border: 3px solid #fff; pointer-events: none; animation: onda .6s ease-out forwards; }
+  @keyframes onda { to { transform: scale(9); opacity: 0; } }
+
+  /* Portada y cierre */
+  .tapa { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 70; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    gap: calc(var(--u) * 4.5); padding: calc(var(--u) * 7); transition: opacity .8s; }
+  .tapa.fuera { opacity: 0; pointer-events: none; }
+  .tapa img { width: calc(var(--u) * 30); height: calc(var(--u) * 30); border-radius: calc(var(--u) * 6); }
+  .tapa .nom { font-size: calc(var(--u) * 11); font-weight: 800; color: #fff; }
+  .tapa .lema { font-size: calc(var(--u) * 8.5); font-weight: 800; color: #ffd600; line-height: 1.15; }
+  .tapa .tx { font-size: calc(var(--u) * 5.2); color: #ddd; line-height: 1.35; }
+  .tapa .tx b { color: #9be7ff; }
+  .tapa .link { font-size: calc(var(--u) * 5.4); font-weight: 800; color: #000; background: #9be7ff; white-space: nowrap;
+    border-radius: calc(var(--u) * 2.5); padding: calc(var(--u) * 2.5) calc(var(--u) * 3); }
+  .tapa .chico { font-size: calc(var(--u) * 3.8); color: #999; line-height: 1.35; }
+  #pista { position: absolute; bottom: calc(var(--u) * 4); left: 0; right: 0; font-size: calc(var(--u) * 3); color: #555; }
+  #final { display: none; }
+</style>
+</head>
+<body>
+<div id="marco">
+  <div class="top">
+    <span id="estado" class="estado esp">● Esperando GPS…</span>
+    <span id="sonido">🔇 Tocá para activar el sonido</span>
+    <span id="reloj">--:--</span>
+  </div>
+
+  <div id="slot">
+    <div id="siminfo"></div>
+    <div id="cam"><div class="ico">📷</div>
+      <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
+      <div class="max" id="cam-max">--</div></div>
+  </div>
+
+  <div class="vel">
+    <div id="barra">
+      <div><i style="background:#ffffff"></i>0-40</div>
+      <div><i style="background:#3ddc84"></i>40-60</div>
+      <div><i style="background:#ffd600"></i>60-80</div>
+      <div><i style="background:#ff3030"></i>80-130</div>
+      <div><i style="background:#c77dff"></i>+130</div>
+    </div>
+    <div class="num" id="vel">0</div>
+    <div class="uni">km/h</div>
+  </div>
+
+  <div class="grid">
+    <div class="card" id="card-rumbo">
+      <div class="lbl">Rumbo</div>
+      <div class="val"><span id="brujula"><svg viewBox="0 0 100 100"><polygon points="50,4 68,52 50,44 32,52" fill="#ff4500" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><polygon points="32,52 50,44 68,52 50,96" fill="#555" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="48" r="6" fill="#fff"/></svg></span> <span id="dir">--</span></div>
+      <div class="sub" id="grados">---°</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Altura</div>
+      <div class="val" id="alt">--</div>
+      <div class="sub">m (GPS)</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Precisión</div>
+      <div class="val" id="prec">--</div>
+      <div class="sub">m</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Distancia</div>
+      <div class="val" id="dist">0.00</div>
+      <div class="sub">km</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Máxima</div>
+      <div class="val" id="max">0</div>
+      <div class="sub">km/h</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Promedio</div>
+      <div class="val" id="prom">0</div>
+      <div class="sub" id="tiempo">00:00:00</div>
+    </div>
+  </div>
+
+  <div id="narra"></div>
+
+  <div class="btns">
+    <button id="btnAviso">📷 AVISAR CÁMARA</button>
+    <button id="btnViaje" class="verde">▶ INICIAR VIAJE</button>
+  </div>
+
+  <div id="aviso">
+    <div class="tit">📷 ¿Qué viste?</div>
+    <div class="sub" id="av-sub">Ya quedó anotado el lugar</div>
+    <button id="av-fija">CÁMARA FIJA</button>
+    <button id="av-movil">CONTROL MÓVIL<br><span style="font-size:.6em;font-weight:600">(radar de policía o tránsito)</span></button>
+    <button id="av-cancelar">ME EQUIVOQUÉ, NO MANDAR</button>
+  </div>
+
+  <div id="mano">👆</div>
+
+  <div class="tapa" id="portada">
+    <img src="../icono-512.png" alt="">
+    <div class="nom">InfoCam</div>
+    <div class="lema">Evitemos multas<br>entre todos</div>
+    <div class="tx">Esto es una <b>simulación</b>.<br>Así funciona InfoCam en tu celular,<br>en la ruta de verdad.</div>
+    <div id="pista">(clic para empezar)</div>
+  </div>
+
+  <div class="tapa" id="final">
+    <img src="../icono-512.png" alt="">
+    <div class="lema">Evitemos multas<br>entre todos</div>
+    <div class="tx" id="fin-cams">Avisa las cámaras de velocidad<br>de toda la Argentina.</div>
+    <div class="tx">Instalala en tu celular:</div>
+    <div class="link">neurus72.github.io/tablero</div>
+    <div class="chico">Esto fue una simulación.<br>En la ruta funciona igual, con el GPS del celular.</div>
+  </div>
+</div>
+
+<script src="../simulacion/ruta.js"></script><script src="video.js"></script><script src="../camaras.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
+
+// Tamaño del "celular" dibujado: lo más alto que entre en la ventana, siempre 9 × 16
+function medir() {
+  const u = Math.min(window.innerWidth / 100, window.innerHeight / 177.78);
+  $("marco").style.setProperty("--u", u + "px");
+}
+window.addEventListener("resize", medir);
+medir();
+
+let ultimo = null;        // último punto válido
+let distKm = 0, maxKmh = 0;
+let tMov = 0;             // segundos en movimiento
+let inicio = Date.now();
+let viajeOn = false;
+let ultimoFix = null;     // última posición del GPS (para AVISAR CÁMARA)
+let rumboGps = null;
+let velActual = 0;
+
+// Distancia entre dos coordenadas (Haversine), en km
+function distancia(a, b) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat/2)**2 + Math.cos(a.lat*rad) * Math.cos(b.lat*rad) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// Color de la velocidad según km/h (los mismos de la barra de referencia)
+function colorVel(k) {
+  if (k <= 40) return "#ffffff";   // blanco
+  if (k <= 60) return "#3ddc84";   // verde
+  if (k <= 80) return "#ffd600";   // amarillo
+  if (k <= 130) return "#ff3030";  // rojo
+  return "#c77dff";                // lila
+}
+
+function mostrarRumbo(grados) {
+  if (grados == null || isNaN(grados)) return;
+  grados = (grados + 360) % 360;
+  $("dir").textContent = PUNTOS[Math.round(grados / 45) % 8];
+  $("grados").textContent = Math.round(grados) + "°";
+  $("brujula").style.transform = `rotate(${grados}deg)`;
+}
+
+function estado(txt, clase) {
+  $("estado").textContent = "● " + txt;
+  $("estado").className = "estado " + clase;
+}
+
+function onPos(p) {
+  const c = p.coords;
+  const ahora = p.timestamp;
+  estado("GPS OK", "ok");
+  let kmh = (c.speed != null && !isNaN(c.speed)) ? c.speed * 3.6 : null;
+  const punto = { lat: c.latitude, lon: c.longitude, t: ahora };
+  if (ultimo) {
+    const d = distancia(ultimo, punto);
+    const dt = (ahora - ultimo.t) / 1000;
+    if (kmh == null && dt > 0) kmh = (d / dt) * 3600;
+    if (viajeOn && c.accuracy < 30 && kmh > 3) { distKm += d; tMov += dt; }
+  }
+  ultimo = punto;
+  ultimoFix = { la: c.latitude, lo: c.longitude, prec: c.accuracy, t: ahora,
+    rumbo: (c.heading != null && !isNaN(c.heading) && (c.speed || 0) * 3.6 > 5) ? c.heading : null };
+  kmh = kmh || 0;
+  if (kmh < 2) kmh = 0;
+  velActual = kmh;
+  if (viajeOn && kmh > maxKmh) maxKmh = kmh;
+  ultimoFix.kmh = kmh;
+  $("vel").textContent = Math.round(kmh);
+  $("vel").style.color = colorVel(kmh);
+  $("max").textContent = Math.round(maxKmh);
+  $("dist").textContent = distKm.toFixed(2);
+  $("prec").textContent = Math.round(c.accuracy);
+  $("alt").textContent = (c.altitude != null) ? Math.round(c.altitude) : "--";
+  $("prom").textContent = tMov > 0 ? Math.round(distKm / (tMov / 3600)) : 0;
+  if (c.heading != null && !isNaN(c.heading) && kmh > 5) { rumboGps = c.heading; mostrarRumbo(rumboGps); }
+  else rumboGps = null;
+  camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
+}
+navigator.geolocation.watchPosition(onPos, function () {}, {});
+
+// ===== AVISAR UNA CÁMARA QUE NO ESTABA EN LA LISTA (en el video no se manda nada) =====
+const AVISO_SEG = 10;
+let avisoPend = null, avisoTimer = null;
+$("btnAviso").onclick = () => {
+  if (!ultimoFix) return;
+  avisoPend = { la: ultimoFix.la, lo: ultimoFix.lo };
+  $("aviso").className = "on";
+  let quedan = AVISO_SEG;
+  $("av-sub").textContent = "Ya quedó anotado el lugar · " + quedan;
+  clearInterval(avisoTimer);
+  avisoTimer = setInterval(() => {
+    quedan--;
+    $("av-sub").textContent = "Ya quedó anotado el lugar · " + quedan;
+    if (quedan <= 0) avisoCerrar("?");
+  }, 1000);
+};
+function avisoCerrar(tipo) {
+  clearInterval(avisoTimer);
+  $("aviso").className = "";
+  if (avisoPend && tipo) decir("Gracias, cámara anotada");   // lo mismo que dice la app
+  avisoPend = null;
+}
+$("av-fija").onclick = () => avisoCerrar("fija");
+$("av-movil").onclick = () => avisoCerrar("movil");
+$("av-cancelar").onclick = () => avisoCerrar(null);
+
+// ===== AVISO DE CÁMARAS DE VELOCIDAD (igual que la app) =====
+const CAM_ANGULO = 30, CAM_SEG = 30, CAM_MIN_M = 400, CAM_MAX_M = 1200, CAM_TOLERANCIA = 0;
+let camActual = null, camPasadas = {}, pitidoUlt = 0, pasadoDicho = false;
+
+function rumboA(a, b) {
+  const r = Math.PI / 180;
+  const y = Math.sin((b.lon - a.lon) * r) * Math.cos(b.lat * r);
+  const x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lon - a.lon) * r);
+  return (Math.atan2(y, x) / r + 360) % 360;
+}
+function difAng(a, b) { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
+
+function camRevisar(p, kmh, rumbo) {
+  const ahora = Date.now();
+  if (typeof CAMARAS === "undefined") return;
+  if (camActual) {
+    const c = CAMARAS[camActual.i], cp = { lat: c[0], lon: c[1] };
+    const d = distancia(p, cp) * 1000;
+    const atras = rumbo != null && difAng(rumbo, rumboA(p, cp)) > 100;
+    if (d < camActual.dMin) camActual.dMin = d;
+    if ((atras && d < 300) || d > camActual.dMin + 150 || d > CAM_MAX_M + 500) {
+      camPasadas[camActual.i] = ahora; camActual = null; camMostrar(null);
+    } else { camMostrar(c, d, kmh); return; }
+  }
+  if (rumbo == null || kmh < 10) return;
+  const avisoM = Math.min(CAM_MAX_M, Math.max(CAM_MIN_M, kmh / 3.6 * CAM_SEG));
+  let mejor = -1, mejorD = 1e9;
+  for (let i = 0; i < CAMARAS.length; i++) {
+    const c = CAMARAS[i];
+    if (Math.abs(c[0] - p.lat) > 0.02 || Math.abs(c[1] - p.lon) > 0.025) continue;
+    if (camPasadas[i] && ahora - camPasadas[i] < 180000) continue;
+    const cp = { lat: c[0], lon: c[1] };
+    const d = distancia(p, cp) * 1000;
+    if (d > avisoM || d > mejorD) continue;
+    const ang = d < 150 ? 60 : CAM_ANGULO;
+    if (difAng(rumbo, rumboA(p, cp)) > ang) continue;
+    mejor = i; mejorD = d;
+  }
+  if (mejor < 0) return;
+  camActual = { i: mejor, dMin: mejorD };
+  const c = CAMARAS[mejor];
+  const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
+  pasadoDicho = !!yaPasado;
+  decir("Cámara de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  camMostrar(c, mejorD, kmh);
+}
+
+function metrosTexto(d) {
+  if (d >= 950) { const k = Math.round(d / 100) / 10; return k === 1 ? "1 kilómetro" : k.toString().replace(".", ",") + " kilómetros"; }
+  return (Math.round(d / 50) * 50) + " metros";
+}
+
+function camMostrar(c, d, kmh) {
+  const caja = $("cam");
+  if (!c) { caja.className = ""; return; }
+  const pasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
+  caja.className = "on" + (pasado ? " pasado" : "");
+  $("cam-t1").textContent = "CÁMARA a " + (d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m");
+  $("cam-t2").textContent = !c[2] ? "Sin dato de velocidad máxima" : pasado ? "¡BAJÁ LA VELOCIDAD!" : "Máxima " + c[2] + " km/h";
+  $("cam-max").textContent = c[2] || "?";
+  $("cam-t3").textContent = [c[4], c[3]].filter(Boolean).join(" · ");
+  if (pasado) {
+    const ahora = Date.now();
+    if (ahora - pitidoUlt > 1500) { pitidoUlt = ahora; pitido(); }
+    if (!pasadoDicho) { pasadoDicho = true; decir("Bajá la velocidad. Máxima " + c[2]); }
+  }
+}
+
+// ----- Sonido (se habilita con el primer clic) -----
+let audioCtx = null, sonidoOk = false;
+function activarSonido() {
+  if (sonidoOk) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    if ("speechSynthesis" in window) speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+    sonidoOk = true;
+    $("sonido").textContent = "📷 " + (typeof CAMARAS !== "undefined" ? CAMARAS.length.toLocaleString("es-AR") + " cámaras · © OSM" : "sin cámaras");
+    $("sonido").style.color = "#888";
+  } catch (e) {}
+}
+document.addEventListener("click", activarSonido);
+
+function pitido() {
+  if (!audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    for (const dt of [0, 0.25]) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "square"; o.frequency.value = 1400;
+      g.gain.setValueAtTime(0.25, t + dt); g.gain.setValueAtTime(0, t + dt + 0.15);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + dt); o.stop(t + dt + 0.16);
+    }
+  } catch (e) {}
+}
+
+function decir(texto) {
+  if (window.VOZ_LOG) window.VOZ_LOG.push(texto);   // para las pruebas
+  if (!("speechSynthesis" in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = "es-AR"; u.rate = 1.05;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// Reloj y tiempo de viaje (el tiempo de viaje es el de la simulación)
+setInterval(() => {
+  const d = new Date();
+  $("reloj").textContent = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  const s = viajeOn && ultimo ? Math.max(0, Math.floor((ultimo.t - inicio) / 1000)) : 0;
+  const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+  const mm = String(Math.floor(s % 3600 / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  $("tiempo").textContent = `${hh}:${mm}:${ss}`;
+}, 250);
+
+// Botón del viaje: VERDE "INICIAR VIAJE" → NARANJA "REINICIAR VIAJE" (como en la app)
+function botonViaje(estado, texto) { $("btnViaje").className = estado; $("btnViaje").textContent = texto; }
+$("btnViaje").onclick = () => {
+  if (!viajeOn) {
+    distKm = 0; maxKmh = 0; tMov = 0; inicio = ultimo ? ultimo.t : Date.now(); viajeOn = true;
+    botonViaje("naranja", "↻ REINICIAR VIAJE");
+  }
+};
+</script>
+</body>
+</html>
