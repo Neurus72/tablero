@@ -132,7 +132,7 @@
   </div>
 </div>
 
-<script src="ruta.js"></script><script src="demo.js"></script><script src="../camaras.js"></script>
+<script src="ruta.js"></script><script src="demo.js"></script><script src="../camaras.js"></script><script src="../estadistica.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
@@ -405,7 +405,7 @@ function camRevisar(p, kmh, rumbo) {
   const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
   pasadoDicho = !!yaPasado;   // si ya viene pasado, se dice todo junto (si no, la 2ª frase corta a la 1ª)
   // v3: la voz dice dónde es ("Cámara de velocidad en Chascomús, a 850 metros...")
-  decir("Cámara de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  decir("Cámara de control de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
   camMostrar(c, mejorD, kmh);
 }
 
@@ -522,6 +522,7 @@ $("btnViaje").onclick = () => {
     botonViaje("naranja", "↻ REINICIAR VIAJE");
   }
 };
+contarVisita("simulacion");   // v10: estadística anónima
 </script>
 </body>
 </html>

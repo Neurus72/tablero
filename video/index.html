@@ -219,7 +219,7 @@
   </div>
 </div>
 
-<script src="../simulacion/ruta.js"></script><script src="video.js"></script><script src="../camaras.js"></script>
+<script src="../simulacion/ruta.js"></script><script src="video.js"></script><script src="../camaras.js"></script><script src="../estadistica.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
@@ -373,7 +373,7 @@ function camRevisar(p, kmh, rumbo) {
   const c = CAMARAS[mejor];
   const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
   pasadoDicho = !!yaPasado;
-  decir("Cámara de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  decir("Cámara de control de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
   camMostrar(c, mejorD, kmh);
 }
 

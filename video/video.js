@@ -121,6 +121,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     const portada = $('portada');
     if (!Q.get('auto')) await new Promise(r => portada.addEventListener('click', r, { once: true }));
     $('comenzar').style.display = 'none';
+    if (typeof contarVisita === 'function') contarVisita('video');           // estadística: empezó a mirarlo
     portada.className = 'tapa fuera';
     S.corre = true;   // GPS andando, auto parado
     await espera(600);
@@ -187,6 +188,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     S.corre = false;
     await hablar('Entre todos evitamos multas. Instalá InfoCam en tu celu.');   // último audio (texto de Ricar)
     window.VIDEO_FIN = true;
+    if (typeof contarVisita === 'function') contarVisita('video_fin');       // estadística: lo vio hasta el final
   }
 
   document.addEventListener('DOMContentLoaded', function () {

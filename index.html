@@ -168,7 +168,7 @@
   </div>
 </div>
 
-<script src="camaras.js"></script>
+<script src="camaras.js"></script><script src="estadistica.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
@@ -441,7 +441,7 @@ function camRevisar(p, kmh, rumbo) {
   const yaPasado = c[2] && kmh > c[2] + CAM_TOLERANCIA;
   pasadoDicho = !!yaPasado;   // si ya viene pasado, se dice todo junto (si no, la 2ª frase corta a la 1ª)
   // v3: la voz dice dónde es ("Cámara de velocidad en Chascomús, a 850 metros...")
-  decir("Cámara de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
+  decir("Cámara de control de velocidad" + (c[3] ? " en " + c[3] + "," : "") + " a " + metrosTexto(mejorD) + (c[2] ? ". Máxima " + c[2] : "") + (yaPasado ? ". Bajá la velocidad" : ""));
   camMostrar(c, mejorD, kmh);
 }
 
@@ -579,6 +579,7 @@ function instPintar() {
 }
 window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); instEv = e; instPintar(); });
 window.addEventListener("appinstalled", function () {
+  contarVisita("instala");   // v10: estadística
   instEv = null; document.body.classList.remove("coninst");
   decir("Listo. Desde ahora abrí InfoCam con el ícono.");
 });
@@ -634,6 +635,8 @@ $("inst-copiar").onclick = function () {
 };
 instPintar();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
+// v10: estadística anónima (abrió desde el navegador o desde el ícono de la app instalada)
+contarVisita(instalado() ? "icono" : "abre");
 </script>
 </body>
 </html>
