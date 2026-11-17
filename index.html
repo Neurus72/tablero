@@ -17,28 +17,44 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #000; color: #e8e8e8;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
-  .wrap { height: 100%; display: grid; grid-template-rows: auto 1fr auto auto; gap: 8px; padding: 10px; }
-  .top { display: flex; justify-content: space-between; font-size: 14px; color: #888; }
+  /* v11: MISMO DISEÑO QUE EL VIDEO. Todo se mide en "u" (lo calcula medir(): 1% del ancho del celular parado;
+     acostado, la mitad). Parado: cartel de cámara arriba (sin tapar la velocidad), barra de colores, velocidad,
+     cuadros en 2 columnas y botones. Acostado: velocidad a la izquierda, cuadros y botones a la derecha. */
+  .wrap { --u: 4px; height: 100%; display: grid; gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 2.2);
+    grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto auto;
+    grid-template-areas: "top" "slot" "vel" "grid" "btns"; }
+  .top { grid-area: top; display: flex; justify-content: space-between; font-size: calc(var(--u) * 3.2); color: #888; }
   .estado.ok { color: #3ddc84; } .estado.mal { color: #ff5252; } .estado.esp { color: #ffb300; }
-  .vel { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .vel .num { font-size: 34vmin; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
-  .vel .uni { font-size: 5vmin; color: #888; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 8px; text-align: center; }
-  .card .lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
-  .card .val { font-size: 7vmin; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
-  .card .sub { font-size: 12px; color: #666; }
-  .btns { display: flex; gap: 8px; }
+  /* Lugar fijo del cartel de cámara (cuando no hay cámara, un texto gris) */
+  #slot { grid-area: slot; position: relative; height: calc(var(--u) * 22); }
+  #slot-txt { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center;
+    justify-content: center; font-size: calc(var(--u) * 3.6); color: #555; }
+  .vel { grid-area: vel; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
+  /* Barra de referencia de colores (fija; los que cambian de color son los números) */
+  #barra { display: flex; width: 94%; gap: calc(var(--u) * 0.8); margin-bottom: calc(var(--u) * 1.5); }
+  #barra div { flex: 1; text-align: center; font-size: calc(var(--u) * 3.1); color: #ccc; font-weight: 600; }
+  #barra i { display: block; height: calc(var(--u) * 2.4); border-radius: calc(var(--u) * 1.2); margin-bottom: calc(var(--u) * 0.8); }
+  .vel .num { font-size: calc(var(--u) * var(--n, 30)); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
+  .vel .uni { font-size: calc(var(--u) * 4.2); color: #888; }
+  .grid { grid-area: grid; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: calc(var(--u) * 1.6); }
+  .card { background: #111; border: 1px solid #2a2a2a; border-radius: calc(var(--u) * 2.4); padding: calc(var(--u) * 0.8);
+    text-align: center; display: flex; flex-direction: column; justify-content: center; }
+  .card .lbl { font-size: calc(var(--u) * 3); color: #aaa; text-transform: uppercase; letter-spacing: .5px; }
+  .card .val { font-size: calc(var(--u) * 7); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .card .sub { font-size: calc(var(--u) * 2.9); color: #888; }
+  .btns { grid-area: btns; display: flex; gap: calc(var(--u) * 2); }
   button { flex: 1; padding: 12px; font-size: 16px; border-radius: 10px; border: 1px solid #333;
-    background: #1a1a1a; color: #ddd; }
+    background: #1a1a1a; color: #ddd; font-family: inherit; }
   button:active { background: #333; }
+  .btns button { padding: calc(var(--u) * 2.8) calc(var(--u) * 1); font-size: calc(var(--u) * 3.9); font-weight: 800;
+    border-radius: calc(var(--u) * 2.4); white-space: nowrap; }
   /* v5: un solo botón de viaje: verde INICIAR → naranja REINICIAR → rojo (confirmar) */
-  #btnViaje { font-size: 20px; font-weight: 800; padding: 14px; color: #fff; border: none; }
+  #btnViaje { color: #fff; border: none; }
   #btnViaje.verde { background: #1a9e45; }
   #btnViaje.naranja { background: #f08a00; color: #000; }
   #btnViaje.rojo { background: #e00000; }
   /* v6: botón y ventana para avisar una cámara que el tablero no conocía */
-  #btnAviso { flex: 0.8; font-size: 17px; font-weight: 800; padding: 14px 8px; background: #1565c0; color: #fff; border: none; }
+  #btnAviso { flex: 0.85; background: #1565c0; color: #fff; border: none; }
   #aviso { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
     flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; padding: 20px; text-align: center; }
   #aviso.on { display: flex; }
@@ -48,31 +64,30 @@
   #av-fija { background: #ff8c00; color: #000; }
   #av-movil { background: #2f8cff; color: #fff; }
   #av-cancelar { background: #333; color: #ddd; font-size: 5vmin !important; padding: 3vmin !important; }
-  #brujula { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em;
+  #brujula { display: inline-block; width: 1.6em; height: 1.6em; vertical-align: -0.45em;   /* v11: más grande */
     transition: transform .3s; transform-origin: 50% 50%; }
   #brujula svg { width: 100%; height: 100%; display: block; }
   /* v2: cartel de cámara de velocidad (top/left/right, sin inset, por el iPad viejo) */
-  #cam { display: none; position: fixed; top: 34px; left: 10px; right: 10px; z-index: 5;
-    background: #ffb300; color: #000; border-radius: 14px; padding: 10px 14px;
-    align-items: center; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,.6); }
+  #cam { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 5;   /* v11: dentro de #slot */
+    background: #ffb300; color: #000; border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 2) calc(var(--u) * 3);
+    align-items: center; gap: calc(var(--u) * 3); box-shadow: 0 4px 20px rgba(0,0,0,.6); }
   #cam.on { display: flex; }
   #cam.pasado { background: #ff1a1a; color: #fff; animation: titila .6s infinite alternate; }
   @keyframes titila { from { opacity: 1; } to { opacity: .55; } }
-  #cam .ico { font-size: 11vmin; line-height: 1; }
-  #cam .txt { flex: 1; }
-  #cam .t1 { font-size: 5.6vmin; font-weight: 800; white-space: nowrap; }
-  #cam .t2 { font-size: 4.5vmin; font-weight: 600; }
-  #cam .t3 { font-size: 4.2vmin; font-weight: 700; margin-top: 2px; opacity: .85; }   /* v3: ruta y localidad */
-  #cam .max { width: 19vmin; height: 19vmin; border-radius: 50%; background: #fff; color: #000;
-    border: 2.2vmin solid #e00000; display: flex; align-items: center; justify-content: center;
-    font-size: 8vmin; font-weight: 800; flex: none; }
+  #cam .ico { font-size: calc(var(--u) * 10); line-height: 1; }
+  #cam .txt { flex: 1; min-width: 0; }
+  #cam .t1 { font-size: calc(var(--u) * 5.4); font-weight: 800; white-space: nowrap; }
+  #cam .t2 { font-size: calc(var(--u) * 4.4); font-weight: 600; }
+  #cam .t3 { font-size: calc(var(--u) * 4); font-weight: 700; margin-top: 2px; opacity: .85; }   /* v3: ruta y localidad */
+  #cam .max { width: calc(var(--u) * 18); height: calc(var(--u) * 18); border-radius: 50%; background: #fff; color: #000;
+    border: calc(var(--u) * 2) solid #e00000; display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--u) * 7.5); font-weight: 800; flex: none; }
   #sonido { color: #ffb300; }
   /* v7: franja celeste INSTALAR (sólo si no se abrió desde el ícono) y ventana con los pasos */
   #inst-franja { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 20; background: #00b7ff; color: #000;
     font-size: 17px; font-weight: 800; padding: 0 0 0 12px; align-items: center; height: 46px; }
   body.coninst #inst-franja { display: flex; }
   body.coninst .wrap { padding-top: 56px; }
-  body.coninst #cam { top: 80px; }
   #inst-franja .t { flex: 1; }
   #inst-franja .x { width: 50px; height: 46px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
   #inst { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 40; background: rgba(0,0,0,.94);
@@ -87,12 +102,10 @@
   #inst-copiar { background: #00b7ff; color: #000; }
   #inst-cerrar { background: #333; color: #ddd; }
   .compartir { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; }
+  /* v11: acostado (tablet en el tablero, PC): velocidad a la izquierda; cuadros y botones a la derecha */
   @media (orientation: landscape) {
-    .wrap { grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr auto; }
-    .top { grid-column: 1 / 3; }
-    .vel { grid-row: 2 / 4; }
-    .vel .num { font-size: 40vmin; }
-    #cam { right: 46%; }   /* v5: acostado/PC: el cartel sólo sobre la velocidad, sin tapar los cuadros */
+    .wrap { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto 1fr auto;
+      grid-template-areas: "top top" "slot grid" "vel grid" "vel btns"; column-gap: calc(var(--u) * 4); }
   }
 </style>
 </head>
@@ -112,9 +125,11 @@
     <span id="reloj">--:--</span>
   </div>
 
-  <div id="cam"><div class="ico">📷</div>
-    <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
-    <div class="max" id="cam-max">--</div></div>
+  <div id="slot"><div id="slot-txt"></div>
+    <div id="cam"><div class="ico">📷</div>
+      <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
+      <div class="max" id="cam-max">--</div></div>
+  </div>
 
   <div id="aviso">
     <div class="tit">📷 ¿Qué viste?</div>
@@ -125,12 +140,19 @@
   </div>
 
   <div class="vel">
+    <div id="barra">
+      <div><i style="background:#ffffff"></i>0-40</div>
+      <div><i style="background:#3ddc84"></i>40-60</div>
+      <div><i style="background:#ffd600"></i>60-80</div>
+      <div><i style="background:#ff3030"></i>80-130</div>
+      <div><i style="background:#c77dff"></i>+130</div>
+    </div>
     <div class="num" id="vel">0</div>
     <div class="uni">km/h</div>
   </div>
 
   <div class="grid">
-    <div class="card">
+    <div class="card" id="card-rumbo">
       <div class="lbl">Rumbo</div>
       <div class="val"><span id="brujula"><svg viewBox="0 0 100 100"><polygon points="50,4 68,52 50,44 32,52" fill="#ff4500" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><polygon points="32,52 50,44 68,52 50,96" fill="#555" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="48" r="6" fill="#fff"/></svg></span> <span id="dir">--</span></div>
       <div class="sub" id="grados">---°</div>
@@ -172,6 +194,18 @@
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
+
+// v11: tamaño de todo ("u"). Parado: 1% del ancho (o lo que entre a lo alto). Acostado: la mitad del ancho por columna.
+function medir() {
+  const w = window.innerWidth, h = window.innerHeight - (document.body.classList.contains("coninst") ? 56 : 0);
+  const u = w > h ? Math.min(w / 210, h / 88) : Math.min(w / 100, h / 152);
+  // los números de la velocidad usan el lugar que sobra (celulares largos): entre 26 y 48 "u" parado, 20 y 40 acostado
+  const alto = h / u, n = w > h ? Math.max(20, Math.min(40, alto - 52)) : Math.max(26, Math.min(48, alto - 125));
+  const wr = document.querySelector(".wrap");
+  wr.style.setProperty("--u", u + "px"); wr.style.setProperty("--n", n);
+}
+window.addEventListener("resize", medir);
+medir();
 
 let ultimo = null;        // último punto válido
 let distKm = 0, maxKmh = 0;
@@ -258,6 +292,7 @@ function onPos(p) {
     rumboGps = null;
   }
   camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
+  $("slot-txt").textContent = !camActual && kmh >= 10 ? "Sin cámaras cerca" : "";   // v11
 }
 
 function onErr(e) {
@@ -446,7 +481,7 @@ function camRevisar(p, kmh, rumbo) {
 }
 
 function metrosTexto(d) {
-  if (d >= 950) return (Math.round(d / 100) / 10).toString().replace(".", ",") + " kilómetros";
+  if (d >= 950) { const k = Math.round(d / 100) / 10; return k === 1 ? "1 kilómetro" : k.toString().replace(".", ",") + " kilómetros"; }   // v11
   return (Math.round(d / 50) * 50) + " metros";
 }
 
@@ -576,6 +611,7 @@ function instCerradaHoy() { try { return sessionStorage.getItem("tab_inst_x") ==
 function instPintar() {
   const ver = !instalado() && !instCerradaHoy() && (esCelular() || instEv);
   document.body.classList.toggle("coninst", !!ver);
+  medir();   // v11: la franja ocupa lugar arriba
 }
 window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); instEv = e; instPintar(); });
 window.addEventListener("appinstalled", function () {
