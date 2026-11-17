@@ -185,6 +185,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     fin.style.opacity = '1';
     await espera(900);
     S.corre = false;
+    await hablar('Entre todos evitamos multas. Instalá InfoCam en tu celu.');   // último audio (texto de Ricar)
     window.VIDEO_FIN = true;
   }
 
