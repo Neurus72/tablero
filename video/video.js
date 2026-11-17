@@ -151,8 +151,6 @@ window.VOZ_LOG = [];
 
     // Cierre
     const fin = $('final');
-    if (typeof CAMARAS !== 'undefined')
-      $('fin-cams').innerHTML = 'Avisa <b>' + CAMARAS.length.toLocaleString('es-AR') + ' cámaras</b> de velocidad<br>de toda la Argentina.';
     fin.style.display = 'flex'; fin.style.opacity = '0';
     await espera(50);
     fin.style.opacity = '1';
@@ -169,6 +167,10 @@ window.VOZ_LOG = [];
       for (let i = 0; i < RUTA.length; i++) { const dd = m(RUTA[i], c); if (dd < md) { md = dd; mi = i; } }
       return acum[mi] / 1000;
     });
+    // "Avisa 1.049 cámaras que multan, en toda la Argentina." (portada y cierre; el número sale de camaras.js)
+    if (typeof CAMARAS !== 'undefined')
+      $('port-cams').innerHTML = $('fin-cams').innerHTML =
+        'Avisa <b>' + CAMARAS.length.toLocaleString('es-AR') + ' cámaras<br>que multan</b>,<br>en toda la Argentina.';
     paso();                                  // primera posición: el auto parado en el arranque
     mostrarRumbo(rumbo(RUTA[0], RUTA[3]));   // la brújula ya apunta para donde sale la ruta
     guion();
