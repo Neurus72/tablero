@@ -103,6 +103,7 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
     gap: calc(var(--u) * 4.5); padding: calc(var(--u) * 7); transition: opacity .8s; }
   .tapa.fuera { opacity: 0; pointer-events: none; }
+  #portada { padding-bottom: calc(var(--u) * 26); }   /* lugar para el botón TOCÁ PARA COMENZAR */
   .tapa img { width: calc(var(--u) * 30); height: calc(var(--u) * 30); border-radius: calc(var(--u) * 6); }
   .tapa .nom { font-size: calc(var(--u) * 11); font-weight: 800; color: #fff; }
   .tapa .lema { font-size: calc(var(--u) * 8.5); font-weight: 800; color: #ffd600; line-height: 1.15; }
@@ -113,7 +114,12 @@
   .tapa .link { font-size: calc(var(--u) * 5.4); font-weight: 800; color: #000; background: #9be7ff; white-space: nowrap;
     border-radius: calc(var(--u) * 2.5); padding: calc(var(--u) * 2.5) calc(var(--u) * 3); }
   .tapa .chico { font-size: calc(var(--u) * 3.8); color: #999; line-height: 1.35; }
-  #pista { position: absolute; bottom: calc(var(--u) * 4); left: 0; right: 0; font-size: calc(var(--u) * 3); color: #555; }
+  /* Botón para arrancar (el toque hace falta: sin tocar, el navegador no deja sonar la voz) */
+  #comenzar { position: absolute; bottom: calc(var(--u) * 7); left: calc(var(--u) * 10); right: calc(var(--u) * 10);
+    background: #1a9e45; color: #fff; font-size: calc(var(--u) * 6); font-weight: 800; border-radius: calc(var(--u) * 3);
+    padding: calc(var(--u) * 4) calc(var(--u) * 2); animation: late 1s infinite alternate; }
+  @keyframes late { from { transform: scale(1); box-shadow: 0 0 0 0 rgba(61,220,132,.6); }
+    to { transform: scale(1.05); box-shadow: 0 0 0 calc(var(--u) * 2.5) rgba(61,220,132,0); } }
   #final { display: none; }
 </style>
 </head>
@@ -200,7 +206,7 @@
     <div class="lema">Evitemos multas<br>entre todos</div>
     <div class="tx cams" id="port-cams">Avisa las cámaras que multan,<br>en toda la Argentina.</div>
     <div class="tx">Esto es una <b>simulación</b>.<br>Así funciona InfoCam en tu celular,<br>en la ruta de verdad.</div>
-    <div id="pista">(clic para empezar)</div>
+    <div id="comenzar">▶ TOCÁ PARA COMENZAR</div>
   </div>
 
   <div class="tapa" id="final">
@@ -421,11 +427,11 @@ function pitido() {
   } catch (e) {}
 }
 
+// En el video la voz de la app NO corta a la otra: se pone en la fila, así no hablan las dos juntas
 function decir(texto) {
-  if (window.VOZ_LOG) window.VOZ_LOG.push(texto);   // para las pruebas
-  if (!("speechSynthesis" in window)) return;
+  if (window.VOZ_LOG) window.VOZ_LOG.push("APP: " + texto);   // para las pruebas
+  if (!("speechSynthesis" in window) || window.SIN_VOZ) return;
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = "es-AR"; u.rate = 1.05;
     speechSynthesis.speak(u);
