@@ -29,6 +29,39 @@
   #slot { grid-area: slot; position: relative; height: calc(var(--u) * 22); }
   #slot-txt { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center;
     justify-content: center; font-size: calc(var(--u) * 3.6); color: #555; }
+  /* v13: botón CÁMARAS DE MI RUTA (en el lugar del cartel, sólo parado) y su ventana */
+  #btnRuta { position: absolute; top: 50%; left: 6%; right: 6%; transform: translateY(-50%); display: none;
+    background: #0b2a3d; color: #9be7ff; border: 2px solid #00b7ff; border-radius: calc(var(--u) * 3);
+    font-size: calc(var(--u) * 4.6); font-weight: 800; padding: calc(var(--u) * 3.2) calc(var(--u) * 2); }
+  #btnRuta.ver { display: block; }
+  #ruta { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 35; background: #000;
+    flex-direction: column; }
+  #ruta.on { display: flex; }
+  #ruta .cab { display: flex; align-items: center; background: #0b2a3d; color: #9be7ff; font-size: 19px; font-weight: 800;
+    padding: 0 0 0 14px; height: 54px; flex: none; }
+  #ruta .cab span { flex: 1; }
+  #ruta .cab b { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; }
+  #rt-cuerpo { flex: 1; overflow-y: auto; padding: 14px; font-size: 18px; line-height: 1.4; }
+  #rt-cuerpo .lbl { color: #aaa; font-size: 15px; margin: 12px 0 6px; }
+  #rt-cuerpo input { width: 100%; font-size: 20px; padding: 12px; border-radius: 10px; border: 1px solid #555; background: #1a1a1a; color: #fff; }
+  #rt-cuerpo button { width: 100%; margin-top: 10px; font-size: 19px; font-weight: 800; padding: 14px; border: none; border-radius: 10px; }
+  #rt-cuerpo .azul { background: #00b7ff; color: #000; }
+  #rt-cuerpo .gris { background: #333; color: #ddd; }
+  #rt-cuerpo .lug { display: block; text-align: left; background: #161616; color: #fff; border: 1px solid #333; font-weight: 700; }
+  #rt-cuerpo .lug small { display: block; color: #999; font-weight: 400; font-size: 14px; }
+  #rt-cuerpo .desde { color: #3ddc84; }
+  #rt-cuerpo .link { color: #9be7ff; text-decoration: underline; cursor: pointer; font-size: 16px; }
+  #rt-cuerpo .msj { color: #ffb300; margin-top: 12px; }
+  .rt-res { background: #0b2a3d; border-radius: 12px; padding: 12px 14px; }
+  .rt-res .dest { font-size: 24px; font-weight: 800; color: #fff; }
+  .rt-res .tot { font-size: 30px; font-weight: 800; color: #ffb300; margin-top: 4px; }
+  .rt-cam { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid #222; }
+  .rt-cam .km { width: 66px; flex: none; text-align: right; font-size: 20px; font-weight: 800; color: #fff; }
+  .rt-cam .km small { display: block; font-size: 12px; color: #888; font-weight: 400; }
+  .rt-cam .mx { width: 46px; height: 46px; flex: none; border-radius: 50%; background: #fff; color: #000; border: 5px solid #e00000;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; }
+  .rt-cam .lu { flex: 1; font-size: 17px; }
+  .rt-cam .lu small { display: block; color: #999; font-size: 14px; }
   .vel { grid-area: vel; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
   /* Barra de referencia de colores (fija; los que cambian de color son los números) */
   #barra { display: flex; width: 94%; gap: calc(var(--u) * 0.8); margin-bottom: calc(var(--u) * 1.5); }
@@ -118,6 +151,8 @@
   <button id="inst-copiar">COPIAR LINK</button>
   <button id="inst-cerrar">CERRAR</button>
 </div>
+<!-- v13: ventana CÁMARAS DE MI RUTA -->
+<div id="ruta"><div class="cab"><span>🗺 CÁMARAS DE MI RUTA</span><b id="rt-x">✕</b></div><div id="rt-cuerpo"></div></div>
 <div class="wrap">
   <div class="top">
     <span id="estado" class="estado esp">● Esperando GPS…</span>
@@ -126,6 +161,7 @@
   </div>
 
   <div id="slot"><div id="slot-txt"></div>
+    <button id="btnRuta" class="ver">🗺 CÁMARAS DE MI RUTA</button>
     <div id="cam"><div class="ico">📷</div>
       <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
       <div class="max" id="cam-max">--</div></div>
@@ -293,6 +329,7 @@ function onPos(p) {
   }
   camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
   $("slot-txt").textContent = !camActual && kmh >= 10 ? "Sin cámaras cerca" : "";   // v11
+  $("btnRuta").className = !camActual && kmh < 10 ? "ver" : "";   // v13: el botón de la ruta sólo parado
 }
 
 function onErr(e) {
@@ -673,6 +710,136 @@ instPintar();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
 // v10: estadística anónima (abrió desde el navegador o desde el ícono de la app instalada)
 contarVisita(instalado() ? "icono" : "abre");
+
+// ===== v13: CÁMARAS DE MI RUTA =====
+// La persona elige adónde va; el servidor calcula el camino (hace falta internet en ese momento) y acá se buscan
+// en la lista del celular (camaras.js) las cámaras que quedan sobre el camino, en orden. La última queda guardada.
+const RUTA_API = (location.hostname === "127.0.0.1" || location.hostname === "localhost") ? "http://127.0.0.1:8787" : "https://tablero-avisos.gps-moto.workers.dev";
+const RUTA_CERCA_M = 60;          // una cámara a menos de 60 m del camino cuenta como "en el camino"
+let rtDesde = null;               // {n, la, lo} si sale de otro lugar; null = donde estoy
+function rtEsc(t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+function rtGuardada() { try { return JSON.parse(localStorage.getItem("tab_ruta") || "null"); } catch (e) { return null; } }
+function rtTiempo(min) { const h = Math.floor(min / 60), m = min % 60; return h ? h + " h " + (m < 10 ? "0" : "") + m + " min" : m + " min"; }
+function rtAbrir() { $("ruta").className = "on"; rtForm(""); }
+function rtCerrar() { $("ruta").className = ""; }
+$("btnRuta").onclick = rtAbrir;
+$("rt-x").onclick = rtCerrar;
+
+function rtForm(msj) {
+  const g = rtGuardada();
+  const desde = rtDesde ? '<span class="desde">' + rtEsc(rtDesde.n) + '</span>'
+    : (ultimoFix ? '<span class="desde">📍 Donde estoy ahora</span>' : '<span style="color:#ffb300">Todavía no hay GPS</span>');
+  $("rt-cuerpo").innerHTML =
+    '<div class="lbl">¿ADÓNDE VAS?</div><input id="rt-hasta" placeholder="Ej.: Mar del Plata" autocomplete="off">' +
+    '<button class="azul" id="rt-buscar">BUSCAR</button>' +
+    '<div class="lbl">SALGO DESDE</div><div>' + desde + ' &nbsp; <span class="link" id="rt-otro">' + (rtDesde ? "usar donde estoy" : "salgo de otro lugar") + '</span></div>' +
+    (msj ? '<div class="msj">' + msj + '</div>' : '') + '<div id="rt-lugares"></div>' +
+    (g ? '<div class="lbl" style="margin-top:22px">ÚLTIMA RUTA CALCULADA</div><button class="lug" id="rt-ultima">' + rtEsc(g.dest) +
+      '<small>' + g.cams.length + ' cámaras · ' + Math.round(g.km) + ' km</small></button>' : '');
+  $("rt-buscar").onclick = function () { rtBuscar($("rt-hasta").value, "hasta"); };
+  $("rt-hasta").addEventListener("keydown", function (e) { if (e.key === "Enter") rtBuscar($("rt-hasta").value, "hasta"); });
+  $("rt-otro").onclick = function () {
+    if (rtDesde) { rtDesde = null; rtForm(""); return; }
+    $("rt-cuerpo").innerHTML = '<div class="lbl">¿DESDE DÓNDE SALÍS?</div><input id="rt-de" placeholder="Ej.: Lomas de Zamora" autocomplete="off">' +
+      '<button class="azul" id="rt-buscar2">BUSCAR</button><button class="gris" id="rt-volver">VOLVER</button><div id="rt-lugares"></div>';
+    $("rt-buscar2").onclick = function () { rtBuscar($("rt-de").value, "desde"); };
+    $("rt-de").addEventListener("keydown", function (e) { if (e.key === "Enter") rtBuscar($("rt-de").value, "desde"); });
+    $("rt-volver").onclick = function () { rtForm(""); };
+    $("rt-de").focus();
+  };
+  if (g) $("rt-ultima").onclick = function () { rtMostrar(g); };
+}
+
+async function rtBuscar(q, cual) {
+  q = (q || "").trim();
+  if (q.length < 2) return;
+  $("rt-lugares").innerHTML = '<div class="msj">Buscando…</div>';
+  try {
+    const r = await fetch(RUTA_API + "/buscar?q=" + encodeURIComponent(q));
+    const d = await r.json();
+    if (!d.lugares || !d.lugares.length) { $("rt-lugares").innerHTML = '<div class="msj">No encontré "' + rtEsc(q) + '". Probá escribirlo de otra forma.</div>'; return; }
+    $("rt-lugares").innerHTML = '<div class="lbl">ELEGÍ EL LUGAR</div>' + d.lugares.map(function (l, i) {
+      return '<button class="lug" data-i="' + i + '">' + rtEsc(l.n) + '<small>' + rtEsc(l.d) + '</small></button>';
+    }).join("");
+    $("rt-lugares").querySelectorAll(".lug").forEach(function (b) {
+      b.onclick = function () {
+        const l = d.lugares[+b.dataset.i];
+        if (cual === "desde") { rtDesde = l; rtForm(""); }
+        else rtCalcular(l);
+      };
+    });
+  } catch (e) {
+    $("rt-lugares").innerHTML = '<div class="msj">Para buscar hace falta internet. (Las cámaras se avisan igual sin internet.)</div>';
+  }
+}
+
+async function rtCalcular(dest) {
+  const de = rtDesde || (ultimoFix ? { la: ultimoFix.la, lo: ultimoFix.lo } : null);
+  if (!de) { rtForm("Todavía no hay GPS: esperá un momento o tocá <b>salgo de otro lugar</b>."); return; }
+  $("rt-cuerpo").innerHTML = '<div class="msj" style="font-size:20px">Calculando el camino a ' + rtEsc(dest.n) + '…</div>';
+  try {
+    const r = await fetch(RUTA_API + "/ruta?d=" + de.la + "," + de.lo + "&h=" + dest.la + "," + dest.lo);
+    const d = await r.json();
+    if (!r.ok || !d.linea) { rtForm(d.error === "sin camino" ? "No encontré un camino por ruta hasta ahí." : "No se pudo calcular el camino. Probá de nuevo."); return; }
+    const res = { dest: dest.n, desde: rtDesde ? rtDesde.n : "", km: d.km, min: d.min, cams: rtCamarasDelCamino(d.linea), t: Date.now() };
+    try { localStorage.setItem("tab_ruta", JSON.stringify(res)); } catch (e) {}
+    rtMostrar(res);
+  } catch (e) {
+    rtForm("Para calcular el camino hace falta internet. (Las cámaras se avisan igual sin internet.)");
+  }
+}
+
+// Busca en la lista del celular las cámaras que quedan a menos de RUTA_CERCA_M del camino, con el km donde están
+function rtCamarasDelCamino(linea) {
+  if (typeof CAMARAS === "undefined" || linea.length < 2) return [];
+  const r = Math.PI / 180, kx = Math.cos(linea[0][0] * r) * 111320, ky = 110540;
+  const acum = [0];
+  for (let i = 1; i < linea.length; i++) acum.push(acum[i - 1] + distancia({ lat: linea[i - 1][0], lon: linea[i - 1][1] }, { lat: linea[i][0], lon: linea[i][1] }) * 1000);
+  let a0 = 90, a1 = -90, o0 = 180, o1 = -180;
+  linea.forEach(function (p) { a0 = Math.min(a0, p[0]); a1 = Math.max(a1, p[0]); o0 = Math.min(o0, p[1]); o1 = Math.max(o1, p[1]); });
+  const res = [];
+  for (let c = 0; c < CAMARAS.length; c++) {
+    const k = CAMARAS[c];
+    if (k[0] < a0 - 0.01 || k[0] > a1 + 0.01 || k[1] < o0 - 0.01 || k[1] > o1 + 0.01) continue;
+    let mejor = 1e9, enM = 0;
+    for (let i = 1; i < linea.length; i++) {
+      const ax = linea[i - 1][1] * kx, ay = linea[i - 1][0] * ky, bx = linea[i][1] * kx, by = linea[i][0] * ky;
+      const px = k[1] * kx, py = k[0] * ky, dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy || 1;
+      let t = ((px - ax) * dx + (py - ay) * dy) / L; t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const d = Math.hypot(px - ax - t * dx, py - ay - t * dy);
+      if (d < mejor) { mejor = d; enM = acum[i - 1] + t * (acum[i] - acum[i - 1]); }
+    }
+    if (mejor <= RUTA_CERCA_M) res.push({ km: Math.round(enM / 100) / 10, max: k[2] || 0, lugar: k[3] || "", ruta: k[4] || "" });
+  }
+  res.sort(function (x, y) { return x.km - y.km; });
+  // Dos cámaras en el mismo lugar (a menos de 300 m) con la misma máxima: casi siempre es una para cada mano → va una sola
+  const juntas = [];
+  res.forEach(function (c) {
+    const u = juntas[juntas.length - 1];
+    if (u && c.km - u.km <= 0.3 && c.max === u.max) u.dos = true; else juntas.push(c);
+  });
+  return juntas;
+}
+
+function rtMostrar(g) {
+  const n = g.cams.length;
+  $("rt-cuerpo").innerHTML =
+    '<div class="rt-res"><div class="dest">' + (g.desde ? rtEsc(g.desde) + " → " : "") + rtEsc(g.dest) + '</div>' +
+    '<div>' + Math.round(g.km) + ' km · unas ' + rtTiempo(g.min) + ' de manejo</div>' +
+    '<div class="tot">' + (n ? n + (n === 1 ? " cámara" : " cámaras") + " en el camino" : "Ninguna cámara conocida en el camino") + '</div></div>' +
+    g.cams.map(function (c) {
+      return '<div class="rt-cam"><div class="km">' + (c.km < 1 ? "0" : Math.round(c.km)) + '<small>km</small></div>' +
+        '<div class="mx">' + (c.max || "?") + '</div>' +
+        '<div class="lu">' + rtEsc(c.ruta || "Calle") + '<small>' + rtEsc(c.lugar) + (c.max ? "" : " · sin dato de máxima") +
+        (c.dos ? " · una para cada mano" : "") + '</small></div></div>';
+    }).join("") +
+    '<p style="color:#aaa;font-size:15px;margin-top:14px">En el viaje las cámaras se avisan solas, aunque no haya señal. ' +
+    'Los km son desde la salida. Puede haber cámaras nuevas que todavía no están en la lista: si ves una, tocá AVISAR CÁMARA.</p>' +
+    '<button class="azul" id="rt-otra">OTRA RUTA</button><button class="gris" id="rt-cerrar">CERRAR</button>';
+  $("rt-otra").onclick = function () { rtForm(""); };
+  $("rt-cerrar").onclick = rtCerrar;
+  $("rt-cuerpo").scrollTop = 0;
+}
 </script>
 </body>
 </html>
