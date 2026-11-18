@@ -23,7 +23,28 @@
   .wrap { --u: 4px; height: 100%; display: grid; gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 2.2);
     grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto auto;
     grid-template-areas: "top" "slot" "vel" "grid" "btns"; }
-  .top { grid-area: top; display: flex; justify-content: space-between; font-size: calc(var(--u) * 3.2); color: #888; }
+  .top { grid-area: top; display: flex; justify-content: space-between; align-items: center; gap: calc(var(--u) * 2);
+    font-size: calc(var(--u) * 3.2); color: #888; }
+  /* v14: SALIR (arriba a la izquierda). Hay que MANTENERLO APRETADO 1,5 s, como en la app de la moto */
+  #btnSalir { position: relative; overflow: hidden; flex: none; background: #2a0000; color: #ff6b6b; border: 1px solid #ff4444;
+    border-radius: 6px; font-size: calc(var(--u) * 3.2); font-weight: 800; padding: calc(var(--u) * 0.8) calc(var(--u) * 2.2);
+    touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  #btnSalir span { position: relative; }
+  #salir-lleno { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255,68,68,.6); }
+  #salir-cartel { display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 45; background: rgba(0,0,0,.6);
+    align-items: center; justify-content: center; padding: 20px; pointer-events: none; }
+  #salir-cartel.on { display: flex; }
+  #salir-cartel .caja { background: #111; border: 3px solid #ff4444; border-radius: 14px; padding: 22px 18px; width: 100%; max-width: 340px; text-align: center; }
+  #salir-cartel b { display: block; color: #ff4444; font-size: 30px; margin-bottom: 6px; }
+  #salir-cartel p { color: #e2f0ff; font-size: 18px; font-weight: bold; margin-bottom: 14px; }
+  #salir-barra { height: 28px; border: 2px solid #ff4444; border-radius: 8px; overflow: hidden; }
+  #salir-barra i { display: block; height: 100%; width: 0; background: #ff4444; }
+  #salido { display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 50; background: #000;
+    flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; }
+  #salido.on { display: flex; }
+  #salido b { font-size: 26px; color: #fff; }
+  #salido p { font-size: 18px; color: #aaa; }
+  #salido button { flex: none; font-size: 20px; font-weight: 800; padding: 16px 28px; border: none; border-radius: 12px; background: #1a9e45; color: #fff; }
   .estado.ok { color: #3ddc84; } .estado.mal { color: #ff5252; } .estado.esp { color: #ffb300; }
   /* Lugar fijo del cartel de cámara (cuando no hay cámara, un texto gris) */
   #slot { grid-area: slot; position: relative; height: calc(var(--u) * 22); }
@@ -151,10 +172,14 @@
   <button id="inst-copiar">COPIAR LINK</button>
   <button id="inst-cerrar">CERRAR</button>
 </div>
+<!-- v14: SALIR mantenido apretado -->
+<div id="salir-cartel"><div class="caja"><b>SALIENDO…</b><p>Mantené el dedo apretado.<br>Soltá para no salir.</p><div id="salir-barra"><i></i></div></div></div>
+<div id="salido"><b>Saliste de InfoCam</b><p>Ya no avisa cámaras. Podés cerrar esta ventana.</p><button id="salido-volver">VOLVER A INFOCAM</button></div>
 <!-- v13: ventana CÁMARAS DE MI RUTA -->
 <div id="ruta"><div class="cab"><span>🗺 CÁMARAS DE MI RUTA</span><b id="rt-x">✕</b></div><div id="rt-cuerpo"></div></div>
 <div class="wrap">
   <div class="top">
+    <button id="btnSalir" oncontextmenu="return false"><i id="salir-lleno"></i><span>SALIR</span></button>
     <span id="estado" class="estado esp">● Esperando GPS…</span>
     <span id="sonido">🔇 Tocá para activar el sonido</span>
     <span id="reloj">--:--</span>
@@ -236,7 +261,7 @@ function medir() {
   const w = window.innerWidth, h = window.innerHeight - (document.body.classList.contains("coninst") ? 56 : 0);
   const u = w > h ? Math.min(w / 210, h / 88) : Math.min(w / 100, h / 152);
   // los números de la velocidad usan el lugar que sobra (celulares largos): entre 26 y 48 "u" parado, 20 y 40 acostado
-  const alto = h / u, n = w > h ? Math.max(20, Math.min(40, alto - 52)) : Math.max(26, Math.min(48, alto - 125));
+  const alto = h / u, n = w > h ? Math.max(20, Math.min(40, alto - 52)) : Math.max(26, Math.min(48, alto - 137));
   const wr = document.querySelector(".wrap");
   wr.style.setProperty("--u", u + "px"); wr.style.setProperty("--n", n);
 }
@@ -337,8 +362,9 @@ function onErr(e) {
   estado(msj[e.code] || "Error GPS", "mal");
 }
 
+let gpsId = null;
 if ("geolocation" in navigator) {
-  navigator.geolocation.watchPosition(onPos, onErr,
+  gpsId = navigator.geolocation.watchPosition(onPos, onErr,   // v14: se guarda para apagarlo al SALIR
     { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
 } else {
   estado("Este navegador no tiene GPS", "mal");
@@ -601,8 +627,46 @@ async function pedirWakeLock() {
 }
 pedirWakeLock();
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") pedirWakeLock();
+  if (document.visibilityState === "visible" && !saliste) pedirWakeLock();
 });
+
+// ===== v14: SALIR (mantener apretado 1,5 s, como en la app de la moto: así no se sale sin querer) =====
+const SALIR_MS = 1500;
+let salirT = null, salirApretado = false, saliste = false;
+function salirLleno(on) {
+  $("salir-cartel").classList.toggle("on", on);     // cartel grande en el medio: el dedo tapa el botón
+  [$("salir-lleno"), document.querySelector("#salir-barra i")].forEach(function (f) {
+    f.style.transition = "none"; f.style.width = "0";
+    if (!on) return;
+    void f.offsetWidth;                              // medir antes, si no la barra no se anima
+    f.style.transition = "width " + SALIR_MS + "ms linear"; f.style.width = "100%";
+  });
+}
+function salirApretar(e) {
+  e.preventDefault();
+  salirApretado = true; salirLleno(true);
+  salirT = setTimeout(function () { salirT = null; salirApretado = false; salirLleno(false); salir(); }, SALIR_MS);
+}
+function salirSoltar(e) {
+  if (!salirApretado) return;
+  salirApretado = false; salirLleno(false);
+  if (salirT) {
+    clearTimeout(salirT); salirT = null;
+    if (e.type === "pointerup") alertaCorta("Para salir, mantené apretado SALIR hasta que se llene de rojo");
+  }
+}
+$("btnSalir").addEventListener("pointerdown", salirApretar);
+["pointerup", "pointerleave", "pointercancel"].forEach(function (t) { $("btnSalir").addEventListener(t, salirSoltar); });
+function salir() {
+  saliste = true;
+  if (gpsId !== null) { navigator.geolocation.clearWatch(gpsId); gpsId = null; }
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  if (wakeLock) { wakeLock.release().catch(function () {}); wakeLock = null; }
+  window.close();
+  // Si el celular no la deja cerrarse (abierta en Chrome y no desde el ícono), queda este cartel
+  setTimeout(function () { $("salido").className = "on"; }, 400);
+}
+$("salido-volver").onclick = function () { location.reload(); };
 
 // v5: botón del viaje.
 //   VERDE "INICIAR VIAJE" → empieza a contar → NARANJA "REINICIAR VIAJE"

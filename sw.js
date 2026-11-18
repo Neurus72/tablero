@@ -1,7 +1,7 @@
 // v7: InfoCam (antes Tablero) se puede instalar (ícono) y abre aunque no haya internet.
 // Siempre intenta traer lo nuevo de internet; si no hay señal, usa lo guardado.
 // Al cambiar archivos, subir VERSION.
-const VERSION = "infocam-v13-1";
+const VERSION = "infocam-v14-1";
 const BASICOS = ["./", "camaras.js", "estadistica.js", "manifest.webmanifest", "icono-192.png", "icono-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
