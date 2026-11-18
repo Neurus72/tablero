@@ -98,14 +98,15 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
   }
   function marcar(id, on) { $(id).classList.toggle('marca', on); }
   // El dedito va hasta el botón, lo aprieta (con una onda) y lo toca de verdad
-  async function tocar(el, seguir) {
+  async function tocar(el, seguir, viaje) {
     const mano = $('mano'), marco = $('marco');
     const r = el.getBoundingClientRect(), f = marco.getBoundingClientRect(), tam = mano.offsetHeight;
     const cx = r.left - f.left + r.width * 0.5, cy = r.top - f.top + r.height * 0.5;
-    mano.style.transitionDuration = (0.8 / RAP) + 's, ' + (0.8 / RAP) + 's, .15s';
+    const ms = viaje || 800;                          // v16: cuánto tarda el dedito en llegar
+    mano.style.transitionDuration = (ms / 1000 / RAP) + 's, ' + (ms / 1000 / RAP) + 's, .15s';
     mano.style.left = (cx - tam * 0.42) + 'px';     // la punta del dedo queda en el medio del botón
     mano.style.top = (cy - tam * 0.06) + 'px';
-    await espera(950);
+    await espera(ms + 150);
     mano.classList.add('aprieta');
     const o = document.createElement('div'); o.className = 'onda';
     o.style.left = cx + 'px'; o.style.top = cy + 'px'; marco.appendChild(o);
@@ -123,7 +124,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
   }
   // v15: el dedito mantiene apretado SALIR: se llena de rojo y aparece el cartel SALIENDO… con la barra
   async function mantener(el, ms) {
-    await tocar(el, true);
+    await tocar(el, true, 1500);
     $('salir-cartel').classList.add('on');
     [$('salir-lleno'), document.querySelector('#salir-barra i')].forEach(function (f) {
       f.style.transition = 'none'; f.style.width = '0'; void f.offsetWidth;
@@ -249,12 +250,14 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     S.x = 3;
     await narrar('Bajamos a 75: cartel <span class="am">AMARILLO</span>. Pasamos <b>sin multa</b>. 👍');
 
-    // v15: SALIR se mantiene apretado
-    const n9 = narrar('Para salir, mantené apretado <span class="ro">SALIR</span>.');
-    await espera(300);
+    // v15: SALIR se mantiene apretado · v16: más tranquilo (Ricar: "el final pasa muy rápido")
+    await silencio();                                   // que termine la voz anterior (la de la cámara)
+    const n9 = narrar('Para salir, mantené apretado <span class="ro">SALIR</span>, hasta que se llene la barra.');
+    await espera(1300);
     await mantener($('btnSalir'), 1500);
-    manoFuera();
     await n9;
+    await espera(1500);                                 // la barra llena queda a la vista
+    manoFuera();
     narrar('');
 
     // Cierre
