@@ -137,6 +137,14 @@
     border: calc(var(--u) * 2) solid #e00000; display: flex; align-items: center; justify-content: center;
     font-size: calc(var(--u) * 7.5); font-weight: 800; flex: none; }
   #sonido { color: #ffb300; }
+  /* v17: franja verde HAY UNA VERSIÓN NUEVA (sólo parado); si está, tapa a la de INSTALAR */
+  #act-franja { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 21; background: #1a9e45; color: #fff;
+    font-size: 18px; font-weight: 800; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    height: 58px; padding: 0 10px; cursor: pointer; line-height: 1.2; }
+  #act-franja small { font-size: 14px; font-weight: 600; }
+  body.conact #act-franja { display: flex; }
+  body.conact .wrap { padding-top: 66px; }
+  body.conact #inst-franja { display: none; }
   /* v7: franja celeste INSTALAR (sólo si no se abrió desde el ícono) y ventana con los pasos */
   #inst-franja { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 20; background: #00b7ff; color: #000;
     font-size: 17px; font-weight: 800; padding: 0 0 0 12px; align-items: center; height: 46px; }
@@ -164,6 +172,7 @@
 </style>
 </head>
 <body>
+<div id="act-franja">🔄 HAY UNA VERSIÓN NUEVA<small>Tocá acá para actualizar</small></div>
 <div id="inst-franja"><span class="t" id="inst-abrir">📲 INSTALAR INFOCAM</span><span class="x" id="inst-x">✕</span></div>
 <div id="inst">
   <div class="tit">📲 INSTALAR INFOCAM</div>
@@ -258,7 +267,8 @@ const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
 
 // v11: tamaño de todo ("u"). Parado: 1% del ancho (o lo que entre a lo alto). Acostado: la mitad del ancho por columna.
 function medir() {
-  const w = window.innerWidth, h = window.innerHeight - (document.body.classList.contains("coninst") ? 56 : 0);
+  const cl = document.body.classList;
+  const w = window.innerWidth, h = window.innerHeight - (cl.contains("conact") ? 66 : cl.contains("coninst") ? 56 : 0);
   const u = w > h ? Math.min(w / 210, h / 88) : Math.min(w / 100, h / 152);
   // los números de la velocidad usan el lugar que sobra (celulares largos): entre 26 y 48 "u" parado, 20 y 40 acostado
   const alto = h / u, n = w > h ? Math.max(20, Math.min(40, alto - 52)) : Math.max(26, Math.min(48, alto - 137));
@@ -355,6 +365,7 @@ function onPos(p) {
   camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
   $("slot-txt").textContent = !camActual && kmh >= 10 ? "Sin cámaras cerca" : "";   // v11
   $("btnRuta").className = !camActual && kmh < 10 ? "ver" : "";   // v13: el botón de la ruta sólo parado
+  actParado = kmh < 10; actPintar();                                // v17: el aviso de versión nueva, sólo parado
 }
 
 function onErr(e) {
@@ -772,6 +783,36 @@ $("inst-copiar").onclick = function () {
 };
 instPintar();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});
+
+// ===== v17: AVISO DE VERSIÓN NUEVA =====
+// Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
+// de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
+// Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
+const APP_VERSION = "infocam-v17-1";
+let actHay = false, actParado = true;
+function actPintar() {
+  const on = actHay && actParado, b = document.body.classList;
+  if (b.contains("conact") !== on) { b.toggle("conact", on); medir(); }
+}
+async function actRevisar() {
+  if (navigator.onLine === false) return;
+  try {
+    const r = await fetch("sw.js?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const m = /VERSION\s*=\s*"([^"]+)"/.exec(await r.text());
+    if (m && m[1] !== APP_VERSION) { actHay = true; actPintar(); }
+  } catch (e) {}
+}
+async function actualizar() {
+  $("act-franja").textContent = "Actualizando…";
+  try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.update(); } catch (e) {}
+  location.replace(location.pathname + "?act=" + Date.now());   // dirección nueva = la página recién bajada
+}
+$("act-franja").onclick = actualizar;
+if (/[?&]act=/.test(location.search)) history.replaceState(null, "", location.pathname);   // que no quede "?act=" a la vista
+setTimeout(actRevisar, 3000);
+setInterval(actRevisar, 30 * 60000);
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") actRevisar(); });
 // v10: estadística anónima (abrió desde el navegador o desde el ícono de la app instalada)
 contarVisita(instalado() ? "icono" : "abre");
 
