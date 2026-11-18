@@ -17,7 +17,52 @@
   #marco { --u: 4px; position: relative; overflow: hidden; background: #000;
     width: calc(var(--u) * 100); height: calc(var(--u) * 177.78);
     display: flex; flex-direction: column; gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 2.2); }
-  .top { display: flex; justify-content: space-between; font-size: calc(var(--u) * 3.2); color: #888; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: calc(var(--u) * 2); font-size: calc(var(--u) * 3.2); color: #888; }
+  /* v15: igual que la app v14: SALIR arriba a la izquierda (se mantiene apretado) y botón CÁMARAS DE MI RUTA parado */
+  #btnSalir { position: relative; overflow: hidden; flex: none; background: #2a0000; color: #ff6b6b; border: 1px solid #ff4444;
+    border-radius: 6px; font-size: calc(var(--u) * 3.2); font-weight: 800; padding: calc(var(--u) * 0.8) calc(var(--u) * 2.2); }
+  #btnSalir span { position: relative; }
+  #salir-lleno { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255,68,68,.6); }
+  #salir-cartel { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 45; background: rgba(0,0,0,.6);
+    align-items: center; justify-content: center; padding: calc(var(--u) * 5); pointer-events: none; }
+  #salir-cartel.on { display: flex; }
+  #salir-cartel .caja { background: #111; border: 3px solid #ff4444; border-radius: calc(var(--u) * 3.5); padding: calc(var(--u) * 5.5) calc(var(--u) * 4.5); width: 100%; text-align: center; }
+  #salir-cartel b { display: block; color: #ff4444; font-size: calc(var(--u) * 7.5); margin-bottom: calc(var(--u) * 1.5); }
+  #salir-cartel p { color: #e2f0ff; font-size: calc(var(--u) * 4.5); font-weight: bold; margin-bottom: calc(var(--u) * 3.5); }
+  #salir-barra { height: calc(var(--u) * 7); border: 2px solid #ff4444; border-radius: calc(var(--u) * 2); overflow: hidden; }
+  #salir-barra i { display: block; height: 100%; width: 0; background: #ff4444; }
+  #btnRuta { position: absolute; top: 50%; left: 6%; right: 6%; transform: translateY(-50%); display: none;
+    background: #0b2a3d; color: #9be7ff; border: 2px solid #00b7ff; border-radius: calc(var(--u) * 3);
+    font-size: calc(var(--u) * 4.6); font-weight: 800; padding: calc(var(--u) * 3.2) calc(var(--u) * 2); }
+  #btnRuta.ver { display: block; }
+  #ruta { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 35; background: #000; flex-direction: column; }
+  #ruta.on { display: flex; }
+  #ruta .cab { display: flex; align-items: center; background: #0b2a3d; color: #9be7ff; font-size: calc(var(--u) * 4.8); font-weight: 800;
+    padding: 0 0 0 calc(var(--u) * 3.5); height: calc(var(--u) * 13); flex: none; }
+  #ruta .cab span { flex: 1; }
+  #ruta .cab b { width: calc(var(--u) * 13); text-align: center; font-size: calc(var(--u) * 6); color: #fff; }
+  #rt-cuerpo { flex: 1; overflow: hidden; padding: calc(var(--u) * 3.5); font-size: calc(var(--u) * 4.5); line-height: 1.4; }
+  #rt-cuerpo .lbl { color: #aaa; font-size: calc(var(--u) * 3.8); margin: calc(var(--u) * 3) 0 calc(var(--u) * 1.5); }
+  #rt-cuerpo .campo { width: 100%; font-size: calc(var(--u) * 5); padding: calc(var(--u) * 3); border-radius: calc(var(--u) * 2.5);
+    border: 1px solid #555; background: #1a1a1a; color: #fff; min-height: calc(var(--u) * 13); }
+  #rt-cuerpo .campo.vacio { color: #666; }
+  #rt-cuerpo button { width: 100%; margin-top: calc(var(--u) * 2.5); font-size: calc(var(--u) * 4.8); font-weight: 800; padding: calc(var(--u) * 3.5);
+    border: none; border-radius: calc(var(--u) * 2.5); white-space: normal; }
+  #rt-cuerpo .azul { background: #00b7ff; color: #000; }
+  #rt-cuerpo .gris { background: #333; color: #ddd; }
+  #rt-cuerpo .lug { display: block; text-align: left; background: #161616; color: #fff; border: 1px solid #333; }
+  #rt-cuerpo .lug small { display: block; color: #999; font-weight: 400; font-size: calc(var(--u) * 3.5); }
+  #rt-cuerpo .desde { color: #3ddc84; }
+  .rt-res { background: #0b2a3d; border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 3) calc(var(--u) * 3.5); }
+  .rt-res .dest { font-size: calc(var(--u) * 6); font-weight: 800; color: #fff; }
+  .rt-res .tot { font-size: calc(var(--u) * 7); font-weight: 800; color: #ffb300; margin-top: calc(var(--u) * 1); line-height: 1.15; }
+  .rt-cam { display: flex; align-items: center; gap: calc(var(--u) * 3); padding: calc(var(--u) * 2) calc(var(--u) * 0.5); border-bottom: 1px solid #222; }
+  .rt-cam .km { width: calc(var(--u) * 15); flex: none; text-align: right; font-size: calc(var(--u) * 5); font-weight: 800; color: #fff; line-height: 1.1; }
+  .rt-cam .km small { display: block; font-size: calc(var(--u) * 3); color: #888; font-weight: 400; }
+  .rt-cam .mx { width: calc(var(--u) * 11.5); height: calc(var(--u) * 11.5); flex: none; border-radius: 50%; background: #fff; color: #000;
+    border: calc(var(--u) * 1.2) solid #e00000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: calc(var(--u) * 4.2); }
+  .rt-cam .lu { flex: 1; font-size: calc(var(--u) * 4.3); }
+  .rt-cam .lu small { display: block; color: #999; font-size: calc(var(--u) * 3.5); }
   .estado.ok { color: #3ddc84; } .estado.mal { color: #ff5252; } .estado.esp { color: #ffb300; }
 
   /* Lugar del cartel de cámara (cuando no hay cámara se ve el dato de la simulación) */
@@ -126,13 +171,15 @@
 <body>
 <div id="marco">
   <div class="top">
+    <button id="btnSalir"><i id="salir-lleno"></i><span>SALIR</span></button>
     <span id="estado" class="estado esp">● Esperando GPS…</span>
-    <span id="sonido">🔇 Tocá para activar el sonido</span>
+    <span id="sonido">🔇 Tocá para el sonido</span>
     <span id="reloj">--:--</span>
   </div>
 
   <div id="slot">
     <div id="siminfo"></div>
+    <button id="btnRuta" class="ver">🗺 CÁMARAS DE MI RUTA</button>
     <div id="cam"><div class="ico">📷</div>
       <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
       <div class="max" id="cam-max">--</div></div>
@@ -198,6 +245,8 @@
     <button id="av-cancelar">ME EQUIVOQUÉ, NO MANDAR</button>
   </div>
 
+  <div id="ruta"><div class="cab"><span>🗺 CÁMARAS DE MI RUTA</span><b>✕</b></div><div id="rt-cuerpo"></div></div>
+  <div id="salir-cartel"><div class="caja"><b>SALIENDO…</b><p>Mantené el dedo apretado.<br>Soltá para no salir.</p><div id="salir-barra"><i></i></div></div></div>
   <div id="mano">👆</div>
 
   <div class="tapa" id="portada">

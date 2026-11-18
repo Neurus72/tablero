@@ -45,7 +45,9 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     const a = RUTA[i - 1], b = RUTA[i];
     cb && cb({ timestamp: S.t, coords: { latitude: a[0] + (b[0] - a[0]) * f, longitude: a[1] + (b[1] - a[1]) * f,
       speed: S.v / 3.6, heading: rumbo(a, b), accuracy: 5, altitude: 12 } });
-    $('siminfo').style.visibility = camOn() ? 'hidden' : 'visible';   // abajo del cartel (que titila) no se ve
+    // v15: parado y sin cartel, en ese lugar va el botón CÁMARAS DE MI RUTA (como en la app); andando, el dato de la simulación
+    $('btnRuta').className = !camOn() && S.v < 10 ? 'ver' : '';
+    $('siminfo').style.visibility = camOn() || S.v < 10 ? 'hidden' : 'visible';
     const km = S.d / 1000, prox = CAMS_KM.find(k => k > km);
     $('siminfo').innerHTML = 'SIMULACIÓN · Ruta 2 · km ' + km.toFixed(1).replace('.', ',') +
       '<br>tiempo ' + (S.x <= 1 ? 'real' : '×' + S.x) +
@@ -96,7 +98,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
   }
   function marcar(id, on) { $(id).classList.toggle('marca', on); }
   // El dedito va hasta el botón, lo aprieta (con una onda) y lo toca de verdad
-  async function tocar(el) {
+  async function tocar(el, seguir) {
     const mano = $('mano'), marco = $('marco');
     const r = el.getBoundingClientRect(), f = marco.getBoundingClientRect(), tam = mano.offsetHeight;
     const cx = r.left - f.left + r.width * 0.5, cy = r.top - f.top + r.height * 0.5;
@@ -109,10 +111,63 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     o.style.left = cx + 'px'; o.style.top = cy + 'px'; marco.appendChild(o);
     setTimeout(() => o.remove(), 700);
     await espera(200);
+    if (seguir) return;            // v15: se queda apretando (SALIR)
     el.click();
     await espera(250);
     mano.classList.remove('aprieta');
   }
+  // v15: escribir letra por letra en un "campo" (como si tipeara)
+  async function escribir(el, txt) {
+    el.classList.remove('vacio'); el.textContent = '';
+    for (const c of txt) { el.textContent += c; await espera(110); }
+  }
+  // v15: el dedito mantiene apretado SALIR: se llena de rojo y aparece el cartel SALIENDO… con la barra
+  async function mantener(el, ms) {
+    await tocar(el, true);
+    $('salir-cartel').classList.add('on');
+    [$('salir-lleno'), document.querySelector('#salir-barra i')].forEach(function (f) {
+      f.style.transition = 'none'; f.style.width = '0'; void f.offsetWidth;
+      f.style.transition = 'width ' + (ms / RAP) + 'ms linear'; f.style.width = '100%';
+    });
+    await espera(ms + 300);
+    $('mano').classList.remove('aprieta');
+  }
+  // v15: CÁMARAS DE MI RUTA con el recorrido de la simulación (sin pedir nada a internet)
+  function rtCamaras() {
+    if (typeof CAMARAS === 'undefined') return [];
+    const r = Math.PI / 180, kx = Math.cos(RUTA[0][0] * r) * 111320, ky = 110540, res = [];
+    for (let c = 0; c < CAMARAS.length; c++) {
+      const k = CAMARAS[c];
+      if (k[0] > -35.28 || k[0] < -35.56 || k[1] < -58.08 || k[1] > -57.98) continue;
+      let mejor = 1e9, enM = 0;
+      for (let i = 1; i < RUTA.length; i++) {
+        const ax = RUTA[i - 1][1] * kx, ay = RUTA[i - 1][0] * ky, bx = RUTA[i][1] * kx, by = RUTA[i][0] * ky;
+        const px = k[1] * kx, py = k[0] * ky, dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy || 1;
+        let t = ((px - ax) * dx + (py - ay) * dy) / L; t = t < 0 ? 0 : t > 1 ? 1 : t;
+        const d = Math.hypot(px - ax - t * dx, py - ay - t * dy);
+        if (d < mejor) { mejor = d; enM = acum[i - 1] + t * (acum[i] - acum[i - 1]); }
+      }
+      if (mejor <= 60) res.push({ km: enM / 1000, max: k[2] || 0, lugar: k[3] || '', ruta: k[4] || '' });
+    }
+    return res.sort((a, b) => a.km - b.km);
+  }
+  function rtForm() {
+    $('rt-cuerpo').innerHTML = '<div class="lbl">¿ADÓNDE VAS?</div><div class="campo vacio" id="rt-hasta">Ej.: Mar del Plata</div>' +
+      '<button class="azul" id="rt-buscar">BUSCAR</button>' +
+      '<div class="lbl">SALGO DESDE</div><div><span class="desde">📍 Donde estoy ahora</span></div><div id="rt-lugares"></div>';
+  }
+  function rtLugares() {
+    $('rt-lugares').innerHTML = '<div class="lbl">ELEGÍ EL LUGAR</div><button class="lug" id="rt-lug">Chascomús<small>Partido de Chascomús, Buenos Aires</small></button>';
+  }
+  function rtLista() {
+    const cams = rtCamaras(), km = Math.round(total / 1000);
+    $('rt-cuerpo').innerHTML = '<div class="rt-res"><div class="dest">Chascomús</div><div>' + km + ' km · unas ' + Math.round(km / 85 * 60) +
+      ' min de manejo</div><div class="tot">' + cams.length + ' cámaras en el camino</div></div>' +
+      cams.map(c => '<div class="rt-cam"><div class="km">' + Math.round(c.km) + '<small>km</small></div><div class="mx">' + (c.max || '?') +
+        '</div><div class="lu">' + c.ruta + '<small>' + c.lugar + '</small></div></div>').join('') +
+      '<button class="gris" id="rt-cerrar">CERRAR</button>';
+  }
+
   function manoFuera() { $('mano').style.left = '110%'; $('mano').style.top = '110%'; }
 
   // ----- EL GUION DEL VIDEO (menos de 1,5 minutos) -----
@@ -128,6 +183,26 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
 
     // Audio 1
     await narrar('Comenzamos desde <b>Samborombón</b>, por la <b>Ruta 2</b>, hacia <b>Chascomús</b>.');
+
+    // v15: antes de salir, CÁMARAS DE MI RUTA
+    const n0 = narrar('Antes de salir, tocá <span class="az">🗺 CÁMARAS DE MI RUTA</span> y escribí adónde vas.');
+    await espera(400);
+    rtForm();
+    await tocar($('btnRuta'));
+    $('ruta').className = 'on';
+    await espera(500);
+    await escribir($('rt-hasta'), 'Chascomús');
+    await tocar($('rt-buscar'));
+    rtLugares();
+    await espera(400);
+    await tocar($('rt-lug'));
+    rtLista();
+    manoFuera();
+    await n0;
+    await narrar('Te muestra las cámaras del camino y la <b>máxima</b> de cada una.');
+    await espera(500);
+    await tocar($('rt-cerrar'));
+    $('ruta').className = '';
     const n1 = narrar('En la app, tocá <span class="ve">INICIAR VIAJE</span>.');
     await espera(500);
     await tocar($('btnViaje'));
@@ -137,20 +212,18 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     S.obj = 110; S.x = 8;
     await narrar('Los números cambian de color con la velocidad. Arriba está la <b>referencia</b>.');
     await hasta(() => S.v >= 110);
-    marcar('card-rumbo', true);
-    await narrar('La <b>brújula</b> muestra para dónde vamos.');
-    marcar('card-rumbo', false);
 
     S.x = 40;
     await narrar('Lejos de las cámaras, <b>adelantamos el tiempo</b>.');
+    if (!camOn()) S.x = 80;          // terminada la frase, más rápido todavía (antes se pasaba la cámara hablando)
     await hasta(camOn);
     // Audio 2: primera cámara (primero habla la app, después el cartel celeste)
     S.x = 3;
-    await narrar('Cartel <span class="am">AMARILLO</span> y aviso por voz: la distancia y la velocidad máxima.');
+    await narrar('Cartel <span class="am">AMARILLO</span> y voz: la distancia y la máxima.');
     S.x = 8;
     await hasta(() => !camOn());
     S.x = 4;
-    await narrar('Pasamos a 110, con máxima 120: <b>sin multa</b>. 👍');
+    await narrar('A 110, con máxima 120: <b>sin multa</b>. 👍');
 
     // Avisar una cámara que no estaba en la lista
     S.x = 2;
@@ -167,16 +240,21 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await narrar('Así, <b>entre todos</b>, completamos la lista.');
 
     // Segunda cámara, yendo pasado
-    S.obj = 125; S.x = 40;
-    await narrar('Ahora vamos más rápido…');
+    S.obj = 125; S.x = 80;
     await hasta(camOn);
-    S.x = 1.5;
+    S.x = 2;
     await hasta(camRojo);
     await narrar('¡Vamos pasados! Cartel <span class="ro">ROJO</span>, pitido y voz: hay que frenar.');
     await hasta(() => !camRojo());
     S.x = 3;
     await narrar('Bajamos a 75: cartel <span class="am">AMARILLO</span>. Pasamos <b>sin multa</b>. 👍');
-    await espera(600);
+
+    // v15: SALIR se mantiene apretado
+    const n9 = narrar('Para salir, mantené apretado <span class="ro">SALIR</span>.');
+    await espera(300);
+    await mantener($('btnSalir'), 1500);
+    manoFuera();
+    await n9;
     narrar('');
 
     // Cierre
