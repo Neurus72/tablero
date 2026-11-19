@@ -33,7 +33,7 @@
   .chip { display: inline-block; padding: 1px 8px; border-radius: 6px; font-weight: 800; font-size: 15px; white-space: nowrap; }
   .am { background: #ffb300; color: #000; } .ro { background: #ff1a1a; color: #fff; } .az { background: #1565c0; color: #fff; }
   .ve { background: #1a9e45; color: #fff; } .na { background: #f08a00; color: #000; } .gr { background: #333; color: #ddd; }
-  .nm { background: #ff8c00; color: #000; } .mo { background: #2f8cff; color: #fff; }
+  .nm { background: #ff8c00; color: #000; } .mo { background: #2f8cff; color: #fff; } .po { background: #8e24aa; color: #fff; } .bl { background: #fff; color: #6a1b9a; }
   .ojo { background: #1c1608; border: 1px solid #5a4500; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
   .colores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; }
   .colores > div { background: #000; border: 1px solid #333; border-radius: 10px; text-align: center; padding: 8px 2px; }
@@ -120,8 +120,13 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
       <li>Elegí qué viste:
         <ul>
           <li><span class="chip nm">CÁMARA FIJA</span>: una cámara o medidor de velocidad que está siempre.</li>
-          <li><span class="chip mo">CONTROL MÓVIL</span>: radar de policía o de tránsito puesto ese día.</li>
-          <li><span class="chip gr">ME EQUIVOQUÉ, NO MANDAR</span>: no se manda nada.</li>
+          <li><span class="chip mo">CONTROL DE TRÁNSITO</span>: cámara móvil puesta ese día (de la policía o del municipio).</li>
+          <li><span class="chip po">POLICÍA DE TRÁNSITO</span>: piden documentos o hacen el test de alcoholemia. Se muestra enseguida a los
+            demás conductores que vienen para ese lado, durante una hora. Si pasás y ya no está, tocá <b>YA NO ESTÁ</b> en el cartel violeta
+            y se borra para todos. (Para verlos hace falta internet.)</li>
+          <li><span class="chip gr">ME EQUIVOQUÉ, NO INFORMAR</span>: no se manda nada.</li>
+          <li><span class="chip bl">EL CONTROL YA NO ESTÁ</span>: borra para todos el control de policía de tránsito avisado más cerca
+            (a menos de 1 km).</li>
         </ul>
       </li>
       <li>La voz dice <i>"Gracias, cámara anotada"</i>. Si no elegís nada, a los 10 segundos se manda igual.</li>
