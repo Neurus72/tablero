@@ -460,12 +460,14 @@ $("btnAviso").onclick = () => {
     rumbo: f.rumbo, kmh: Math.round(f.kmh || 0), prec: Math.round(f.prec), tipo: "?", ap: aparatoId(), cerca: camCercana(f.la, f.lo) };
   $("aviso").className = "on";
   decir("¿Qué viste?");   // v18: cada cartel tiene su voz (pedido de Ricar)
+  // v19: el tiempo para arrepentirse va DENTRO del botón ME EQUIVOQUÉ (pedido de Ricar); en 0 se manda igual ("sin tipo")
   let quedan = AVISO_SEG;
-  $("av-sub").textContent = "ANOTADO · " + quedan;
+  $("av-sub").textContent = "ANOTADO";
+  $("av-cancelar").textContent = "ME EQUIVOQUÉ, NO INFORMAR (" + quedan + ")";
   clearInterval(avisoTimer);
   avisoTimer = setInterval(() => {
     quedan--;
-    $("av-sub").textContent = "ANOTADO · " + quedan;
+    $("av-cancelar").textContent = "ME EQUIVOQUÉ, NO INFORMAR (" + quedan + ")";
     if (quedan <= 0) avisoCerrar("?");
   }, 1000);
 };
@@ -479,7 +481,7 @@ function avisoCerrar(tipo) {
   if (tipo) {
     avisoPend.tipo = tipo;
     const c = colaLeer(); c.push(avisoPend); colaGuardar(c);
-    decir(tipo === "policial" ? "Gracias, policía de tránsito avisada" : tipo === "movil" ? "Gracias, control de tránsito anotado" : "Gracias, cámara anotada");   // v18
+    decir(tipo === "policial" ? "Gracias, policía de tránsito avisada" : tipo === "movil" ? "Gracias, control de tránsito anotado" : tipo === "?" ? "Informado" : "Gracias, cámara anotada");   // v18 · v19: se acabó el tiempo = "Informado"
     avisoMandar();
   }
   avisoPend = null;
@@ -496,7 +498,7 @@ $("av-yanoesta").onclick = function () {
   if (!mejor) { alertaCorta("No hay ningún control avisado cerca"); return; }   // sin voz (Ricar: ME EQUIVOQUÉ y YA NO ESTÁ no hablan)
   polBorrar(mejor.id);
 };
-$("av-cancelar").onclick = () => avisoCerrar(null);
+$("av-cancelar").onclick = () => { avisoCerrar(null); decir("No informado"); };   // v19: con voz (pedido de Ricar)
 
 async function avisoMandar() {
   if (avisoEnviando) return;
@@ -700,6 +702,7 @@ function polBorrar(id) {   // se saca el punto acá y en el servidor, para todos
   guardarLS("tab_pol_no", JSON.stringify(l.slice(-50)));
   POL = POL.filter(function (k) { return k.id !== id; });
   if (polActual && polActual.id === id) polCerrar();
+  decir("Informado");   // v19: con voz (pedido de Ricar), desde el cartel violeta o desde la ventana
   polNoMandar();
 };
 let polNoEnviando = false;
@@ -931,7 +934,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v18-1";
+const APP_VERSION = "infocam-v19-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;
