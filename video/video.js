@@ -117,6 +117,19 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await espera(250);
     mano.classList.remove('aprieta');
   }
+  // v23: el dedito va hasta un botón y lo señala (sin tocarlo), con el botón resaltado
+  async function senalar(el, ms) {
+    document.querySelectorAll('#aviso .marca').forEach(b => b.classList.remove('marca'));
+    const mano = $('mano'), marco = $('marco');
+    const r = el.getBoundingClientRect(), f = marco.getBoundingClientRect(), tam = mano.offsetHeight;
+    const cx = r.left - f.left + r.width * 0.5, cy = r.top - f.top + r.height * 0.5;
+    mano.style.transitionDuration = '.5s, .5s, .15s';
+    mano.style.left = (cx - tam * 0.42) + 'px';
+    mano.style.top = (cy - tam * 0.06) + 'px';
+    el.classList.add('marca');
+    await espera(ms || 900);
+  }
+  function sinMarca() { document.querySelectorAll('#aviso .marca').forEach(b => b.classList.remove('marca')); }
   // v15: escribir letra por letra en un "campo" (como si tipeara)
   async function escribir(el, txt) {
     el.classList.remove('vacio'); el.textContent = '';
@@ -188,9 +201,9 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     // v20: mientras lo dice, la lista baja despacio para que se vean las 19 cámaras
     const cu = $('rt-cuerpo'); cu.scrollTop = 0;
     let baja = null;
-    setTimeout(() => { baja = setInterval(() => { cu.scrollTop += 2; }, 16 / RAP); }, 1800 / RAP);   // primero se ve "Pinamar · 266 km · 19 cámaras"
+    setTimeout(() => { baja = setInterval(() => { cu.scrollTop += 4; }, 16 / RAP); }, 1300 / RAP);   // v23: más rápido   // primero se ve "Pinamar · 266 km · 19 cámaras"
     await narrar('Te muestra las cámaras del camino y la <b>máxima</b> de cada una.');
-    await espera(1200);
+    await espera(500);
     clearInterval(baja); cu.scrollTop = cu.scrollHeight;
     await espera(500);
     await tocar($('rt-cerrar'));
@@ -203,8 +216,8 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await narrar('Los números cambian de color con la velocidad. Arriba está la <b>referencia</b>.');
     await hasta(() => S.v >= 110);
 
-    S.x = 40;
-    await narrar('Lejos de las cámaras, <b>adelantamos el tiempo</b>.');
+    S.x = 40;                        // v23: sin la frase "adelantamos el tiempo" (para acortar)
+    await espera(1500);
     if (!camOn()) S.x = 80;          // terminada la frase, más rápido todavía (antes se pasaba la cámara hablando)
     await hasta(camOn);
     // Audio 2: primera cámara (primero habla la app, después el cartel celeste)
@@ -221,13 +234,23 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await espera(1800);
     await tocar($('btnAviso'));
     await n2;
-    const n3 = narrar('Elegís qué viste: <b>cámara</b>, <b>policía</b>, <b>accidente</b> o <b>manifestación</b>.');
-    await espera(600);
-    await tocar($('av-fija'));
+    // v23: la ventana queda abierta y el dedito señala cada botón mientras se nombra (Ricar: "pasa muy rápido")
+    window.avisoPausa = true;      // la cuenta regresiva no baja mientras se explica
+    await silencio();              // "¿Qué viste?" (la app)
+    let n = narrar('Elegís qué viste: una <b>cámara fija</b> o <b>móvil</b>,');
+    await senalar($('av-fija'), 1300); await senalar($('av-movil'), 900); await n;
+    n = narrar('la <b>policía de tránsito</b>, un <b>accidente</b>…');
+    await senalar($('av-policial'), 1300); await senalar($('av-accidente'), 900); await n;
+    n = narrar('…o una <b>manifestación</b>.');
+    await senalar($('av-manifestacion'), 900); await n;
+    n = narrar('Si te equivocaste, tocá <b>ME EQUIVOQUÉ</b> y no se manda nada.');
+    await senalar($('av-cancelar'), 1200); await n;
+    sinMarca();
+    window.avisoPausa = false;
+    await tocar($('av-fija'));     // en este caso, una cámara fija
     manoFuera();
-    await n3;
-    await silencio();   // "Gracias, cámara anotada" (la app)
-    await narrar('Así, <b>entre todos</b>, nos avisamos a los que vienen atrás.');
+    await silencio();              // "Gracias, cámara anotada" (la app)
+    await narrar('Es <b>anónimo</b>: no pide tus datos. Y si no hay señal, se manda solo cuando vuelve.');   // v23: pedido de Ricar
 
     // Segunda cámara, yendo pasado
     S.obj = 125; S.x = 80;
@@ -239,14 +262,9 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     S.x = 3;
     await narrar('Bajamos a 75: cartel <span class="am">AMARILLO</span>. Pasamos <b>sin multa</b>. 👍');
 
-    // v15: SALIR se mantiene apretado · v16: más tranquilo (Ricar: "el final pasa muy rápido")
-    await silencio();                                   // que termine la voz anterior (la de la cámara)
-    const n9 = narrar('Para salir, mantené apretado <span class="ro">SALIR</span>, hasta que se llene la barra.');
-    await espera(1300);
-    await mantener($('btnSalir'), 1500);
-    await n9;
-    await espera(1500);                                 // la barra llena queda a la vista
-    manoFuera();
+    // v23: sin la parte de SALIR (para acortar); que termine la voz de la cámara y al cierre
+    await silencio();
+    await espera(800);
     narrar('');
 
     // Cierre
@@ -256,7 +274,8 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     fin.style.opacity = '1';
     await espera(900);
     S.corre = false;
-    await hablar('Entre todos evitamos multas. Instalá InfoCam en tu celu.');   // último audio (texto de Ricar)
+    setTimeout(() => $('like').classList.add('on'), 1200 / RAP);   // v23: DALE LIKE
+    await hablar('Es gratis, no pide tus datos y funciona sin internet. Entre todos evitamos multas. Instalá InfoCam en tu celu.');   // último audio (texto de Ricar) · v23: + gratis, datos, internet
     window.VIDEO_FIN = true;
     if (typeof contarVisita === 'function') contarVisita('video_fin');       // estadística: lo vio hasta el final
   }

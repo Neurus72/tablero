@@ -102,6 +102,7 @@
   .card .val { font-size: calc(var(--u) * 7); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
   .card .sub { font-size: calc(var(--u) * 2.9); color: #888; }
   .card.marca { border-color: #9be7ff; box-shadow: 0 0 0 calc(var(--u) * 0.8) rgba(155,231,255,.45); }
+  #aviso button.marca { outline: calc(var(--u) * 1) solid #fff; outline-offset: calc(var(--u) * 0.6); }   /* v23: el botón que se está nombrando */
   /* Brújula más grande */
   #brujula { display: inline-block; width: 1.6em; height: 1.6em; vertical-align: -0.45em;
     transition: transform .3s; transform-origin: 50% 50%; }
@@ -169,6 +170,12 @@
   .tapa .link { font-size: calc(var(--u) * 5.4); font-weight: 800; color: #000; background: #9be7ff; white-space: nowrap;
     border-radius: calc(var(--u) * 2.5); padding: calc(var(--u) * 2.5) calc(var(--u) * 3); }
   .tapa .chico { font-size: calc(var(--u) * 3.8); color: #999; line-height: 1.35; }
+  /* v23: DALE LIKE en el cierre (pedido de Ricar), aparece suave un momento después */
+  #like { display: flex; align-items: center; gap: calc(var(--u) * 3); background: #ff0000; color: #fff; border-radius: calc(var(--u) * 10);
+    padding: calc(var(--u) * 2.6) calc(var(--u) * 7); font-size: calc(var(--u) * 8.5); font-weight: 900; letter-spacing: 1px;
+    box-shadow: 0 0 calc(var(--u) * 5) rgba(255,0,0,.45); opacity: 0; transform: scale(.85); transition: opacity .6s, transform .6s; }
+  #like.on { opacity: 1; transform: scale(1); }
+  #like span { font-size: 1.15em; line-height: 1; }
   /* Botón para arrancar (el toque hace falta: sin tocar, el navegador no deja sonar la voz) */
   #comenzar { position: absolute; bottom: calc(var(--u) * 7); left: calc(var(--u) * 10); right: calc(var(--u) * 10);
     background: #1a9e45; color: #fff; font-size: calc(var(--u) * 6); font-weight: 800; border-radius: calc(var(--u) * 3);
@@ -275,9 +282,11 @@
     <img src="../icono-512.png" alt="">
     <div class="lema">Evitemos multas<br>entre todos</div>
     <div class="tx cams" id="fin-cams">Avisa las cámaras que multan,<br>en toda la Argentina.</div>
+    <div class="tx">Gratis · <b>no pide tus datos</b> · funciona <b>sin internet</b></div>   <!-- v23: pedido de Ricar -->
     <div class="tx">Instalala en tu celular:</div>
     <div class="link">neurus72.github.io/tablero</div>
     <div class="chico">Esto fue una simulación.<br>En la ruta funciona igual, con el GPS del celular.</div>
+    <div id="like"><span>👍</span>DALE LIKE</div>
   </div>
 </div>
 
@@ -379,6 +388,7 @@ $("btnAviso").onclick = () => {
   $("av-cancelar").textContent = "ME EQUIVOQUÉ, NO INFORMAR (" + quedan + ")";
   clearInterval(avisoTimer);
   avisoTimer = setInterval(() => {
+    if (window.avisoPausa) return;   // v23: en el video, mientras se explican los botones, no baja
     quedan--;
     $("av-cancelar").textContent = "ME EQUIVOQUÉ, NO INFORMAR (" + quedan + ")";
     if (quedan <= 0) avisoCerrar("?");
