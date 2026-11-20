@@ -108,22 +108,28 @@
   #btnViaje.naranja { background: #f08a00; color: #000; }
   #btnViaje.rojo { background: #e00000; }
   /* v6: botón y ventana para avisar una cámara que el tablero no conocía */
-  #btnAviso { flex: 0.85; background: #1565c0; color: #fff; border: none; }
+  #btnAviso { flex: 1; background: #1565c0; color: #fff; border: none; }
+  .btns #btnAviso { font-size: calc(var(--u) * 5.6); padding: calc(var(--u) * 4) calc(var(--u) * 1); }   /* v21: más grande */
+  /* v21: grilla de 2 columnas: FIJA | MÓVIL, POLICÍA | ACCIDENTE, y abajo a todo el ancho MANIFESTACIÓN, ME EQUIVOQUÉ, YA NO ESTÁ */
   #aviso { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
-    flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; padding: 20px; text-align: center; }
-  #aviso.on { display: flex; }
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: center; gap: 12px; padding: 16px; text-align: center; }
+  #aviso.on { display: grid; }
+  #aviso .tit, #aviso .sub, #aviso .ancho { grid-column: 1 / -1; }
+  #aviso button { line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
+  #av-fija, #av-movil, #av-policial, #av-accidente { font-size: 6.3vmin !important; padding: 4vmin 6px !important; }
   #aviso .tit { font-size: 7vmin; font-weight: 800; }
   #aviso .sub { font-size: 4.5vmin; color: #bbb; }
   #aviso button { flex: none; font-size: 7vmin; font-weight: 800; padding: 4vmin 10px; border: none; border-radius: 14px; }
   #av-fija { background: #ff8c00; color: #000; }
   #av-movil { background: #2f8cff; color: #fff; }
   #av-policial { background: #8e24aa; color: #fff; }   /* v18 */
-  @media (orientation: landscape) {   /* v18: acostado no entran 4 botones uno abajo del otro: los 3 tipos van en fila */
-    #aviso.on { display: grid; grid-template-columns: repeat(6, 1fr); align-content: center; gap: 3vmin; }
-    #aviso .tit, #aviso .sub { grid-column: 1 / -1; }
+  #av-accidente { background: #e53935; color: #fff; }  /* v21 */
+  #av-manifestacion { background: #00897b; color: #fff; }   /* v21 */
+  @media (orientation: landscape) {   /* acostado: los 5 tipos en una fila de 3 y otra de 2 (si no, no entran a lo alto) */
+    #aviso.on { grid-template-columns: repeat(6, 1fr); gap: 2.5vmin; }
     #av-fija, #av-movil, #av-policial { grid-column: span 2; }
-    #av-cancelar, #av-yanoesta { grid-column: span 3; }
-    #aviso button { font-size: 5.5vmin; padding: 6vmin 6px; }
+    #av-accidente, #av-manifestacion.ancho, #av-cancelar.ancho, #av-yanoesta.ancho { grid-column: span 3; }
+    #aviso button, #av-fija, #av-movil, #av-policial, #av-accidente { font-size: 5vmin !important; padding: 3.5vmin 6px !important; }
   }
   #av-cancelar { background: #333; color: #ff5252; font-size: 5vmin !important; padding: 3vmin !important; border: 3px solid #e00000 !important; }   /* v18: letras y borde rojos */
   #av-yanoesta { background: #fff; color: #6a1b9a; font-size: 5vmin !important; padding: 3vmin !important; border: 3px solid #e00000 !important; }   /* v18: borde rojo */
@@ -151,6 +157,10 @@
     background: #8e24aa; color: #fff; border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 2) calc(var(--u) * 3);
     align-items: center; gap: calc(var(--u) * 2.5); box-shadow: 0 4px 20px rgba(0,0,0,.6); }
   #pol.on { display: flex; }
+  #pol.t-accidente { background: #c62828; }   /* v21 */
+  #pol.t-manifestacion { background: #00796b; }   /* v21 */
+  #pol.t-accidente #pol-no { color: #b71c1c; }
+  #pol.t-manifestacion #pol-no { color: #00695c; }
   #pol .ico { font-size: calc(var(--u) * 9); line-height: 1; }
   #pol .txt { flex: 1; min-width: 0; }
   #pol .t1 { font-size: calc(var(--u) * 5); font-weight: 800; line-height: 1.1; }
@@ -207,7 +217,7 @@
 <div id="salir-cartel"><div class="caja"><b>SALIENDO…</b><p>Mantené el dedo apretado.<br>Soltá para no salir.</p><div id="salir-barra"><i></i></div></div></div>
 <div id="salido"><b>Saliste de InfoCam</b><p>Ya no avisa cámaras. Podés cerrar esta ventana.</p><button id="salido-volver">VOLVER A INFOCAM</button></div>
 <!-- v13: ventana CÁMARAS DE MI RUTA -->
-<div id="ruta"><div class="cab"><span>🗺 CÁMARAS DE MI RUTA</span><b id="rt-x">✕</b></div><div id="rt-cuerpo"></div></div>
+<div id="ruta"><div class="cab"><span>🗺 CÁMARAS A MI DESTINO</span><b id="rt-x">✕</b></div><div id="rt-cuerpo"></div></div>
 <div class="wrap">
   <div class="top">
     <button id="btnSalir" oncontextmenu="return false"><i id="salir-lleno"></i><span>SALIR</span></button>
@@ -217,11 +227,11 @@
   </div>
 
   <div id="slot"><div id="slot-txt"></div>
-    <button id="btnRuta" class="ver">🗺 CÁMARAS DE MI RUTA</button>
+    <button id="btnRuta" class="ver">🗺 CÁMARAS A MI DESTINO</button>
     <div id="cam"><div class="ico">📷</div>
       <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
       <div class="max" id="cam-max">--</div></div>
-    <div id="pol"><div class="ico">🚓</div>
+    <div id="pol"><div class="ico" id="pol-ico">🚓</div>
       <div class="txt"><div class="t1" id="pol-t1">POLICÍA DE TRÁNSITO</div><div class="t2" id="pol-t2"></div></div>
       <button id="pol-no">YA NO ESTÁ<small>tocá acá</small></button></div>
   </div>
@@ -229,11 +239,14 @@
   <div id="aviso">
     <div class="tit">📷 ¿Qué viste?</div>
     <div class="sub" id="av-sub">ANOTADO</div>
-    <button id="av-fija">CÁMARA FIJA</button>
-    <button id="av-movil">CONTROL DE TRÁNSITO<br><span style="font-size:4vmin;font-weight:600">(cámara móvil)</span></button>
-    <button id="av-policial">POLICÍA DE TRÁNSITO<br><span style="font-size:4vmin;font-weight:600">(documentos, alcoholemia)</span></button>
-    <button id="av-cancelar">ME EQUIVOQUÉ, NO INFORMAR</button>
-    <button id="av-yanoesta">EL CONTROL YA NO ESTÁ</button>
+    <!-- v21: en 2 columnas (pedido de los usuarios) -->
+    <button id="av-fija">📷<br>CÁMARA FIJA</button>
+    <button id="av-movil">🚐<br>CÁMARA MÓVIL</button>
+    <button id="av-policial">🚓<br>POLICÍA DE TRÁNSITO</button>
+    <button id="av-accidente">💥<br>ACCIDENTE</button>
+    <button id="av-manifestacion" class="ancho">📢 MANIFESTACIÓN</button>
+    <button id="av-cancelar" class="ancho">ME EQUIVOQUÉ, NO INFORMAR</button>
+    <button id="av-yanoesta" class="ancho">EL EVENTO YA NO ESTÁ</button>
   </div>
 
   <div class="vel">
@@ -282,8 +295,7 @@
   </div>
 
   <div class="btns">
-    <button id="btnAviso">📷 AVISAR CÁMARA</button>
-    <button id="btnViaje" class="verde">▶ INICIAR VIAJE</button>
+    <button id="btnAviso">📷 INFORMAR CÁMARA</button>   <!-- v21: sin el botón de viaje (Ricar: "no sirve"); éste ocupa todo -->
   </div>
 </div>
 
@@ -309,7 +321,7 @@ let ultimo = null;        // último punto válido
 let distKm = 0, maxKmh = 0;
 let tMov = 0;             // segundos en movimiento
 let inicio = Date.now();
-let viajeOn = false;
+let viajeOn = true;       // v21: ya no hay botón de viaje: cuenta desde que se abre la app
 let ultimoFix = null;     // v6: última posición del GPS      // v5: la distancia, máxima, promedio y tiempo cuentan sólo con el viaje iniciado
 let rumboGps = null;      // rumbo por GPS cuando hay movimiento
 let velActual = 0;
@@ -481,7 +493,8 @@ function avisoCerrar(tipo) {
   if (tipo) {
     avisoPend.tipo = tipo;
     const c = colaLeer(); c.push(avisoPend); colaGuardar(c);
-    decir(tipo === "policial" ? "Gracias, policía de tránsito avisada" : tipo === "movil" ? "Gracias, control de tránsito anotado" : tipo === "?" ? "Informado" : "Gracias, cámara anotada");   // v18 · v19: se acabó el tiempo = "Informado"
+    decir({ policial: "Gracias, policía de tránsito avisada", movil: "Gracias, cámara móvil anotada", accidente: "Gracias, accidente avisado",
+      manifestacion: "Gracias, manifestación avisada", "?": "Informado" }[tipo] || "Gracias, cámara anotada");   // v21: + accidente y manifestación   // v18 · v19: se acabó el tiempo = "Informado"
     avisoMandar();
   }
   avisoPend = null;
@@ -489,13 +502,15 @@ function avisoCerrar(tipo) {
 $("av-fija").onclick = () => avisoCerrar("fija");
 $("av-movil").onclick = () => avisoCerrar("movil");
 $("av-policial").onclick = () => avisoCerrar("policial");   // v18: se muestra a los demás conductores durante 1 hora
+$("av-accidente").onclick = () => avisoCerrar("accidente");   // v21: también en vivo, 1 hora
+$("av-manifestacion").onclick = () => avisoCerrar("manifestacion");   // v21: también en vivo, 1 hora
 // v18: EL CONTROL YA NO ESTÁ (desde la ventana): borra el control avisado más cercano, a menos de 1 km. No se manda ningún aviso.
 $("av-yanoesta").onclick = function () {
   const a = avisoPend;
   clearInterval(avisoTimer); $("aviso").className = ""; avisoPend = null;
   let mejor = null, md = 1000;
   if (a) POL.forEach(function (k) { const d = distancia({ lat: a.la, lon: a.lo }, { lat: k.la, lon: k.lo }) * 1000; if (d < md) { md = d; mejor = k; } });
-  if (!mejor) { alertaCorta("No hay ningún control avisado cerca"); return; }   // sin voz (Ricar: ME EQUIVOQUÉ y YA NO ESTÁ no hablan)
+  if (!mejor) { alertaCorta("No hay ningún evento avisado cerca"); return; }   // sin voz (Ricar: ME EQUIVOQUÉ y YA NO ESTÁ no hablan)
   polBorrar(mejor.id);
 };
 $("av-cancelar").onclick = () => { avisoCerrar(null); decir("No informado"); };   // v19: con voz (pedido de Ricar)
@@ -516,7 +531,7 @@ async function avisoMandar() {
     } catch (e) {}
     if (!ok) break;   // sin señal: se reintenta más tarde
     colaGuardar(colaLeer().filter(x => x.id !== a.id));
-    if (a.tipo === "policial") polTraer();   // v18: que aparezca enseguida en la lista
+    if (EN_VIVO[a.tipo]) polTraer();   // v18 · v21: que aparezca enseguida en la lista
   }
   avisoEnviando = false;
 }
@@ -621,7 +636,13 @@ function camMostrar(c, d, kmh) {
 // ----- v18: CONTROL POLICIAL en vivo (en pantalla: "POLICÍA DE TRÁNSITO") -----
 // Lo avisa un conductor (AVISAR CÁMARA → CONTROL POLICIAL). Con internet, cada minuto se piden los controles cercanos de la
 // última hora. Si hay uno ADELANTE: cartel violeta + voz. Al pasarlo queda 25 s más preguntando si seguía: YA NO ESTÁ lo borra para todos.
+// v21: también ACCIDENTE y MANIFESTACIÓN (mismo funcionamiento; cada uno con su color, texto y voz). Se piden a /eventos.
 const POL_URL = AVISOS_URL.replace(/\/aviso$/, "");
+const EN_VIVO = {
+  policial:      { ico: "🚓", nom: "POLICÍA DE TRÁNSITO", voz: "Policía de tránsito", seguia: "¿SEGUÍA EL CONTROL?", seguiaVoz: "¿Seguía el control?" },
+  accidente:     { ico: "💥", nom: "ACCIDENTE", voz: "Accidente", seguia: "¿SEGUÍA EL ACCIDENTE?", seguiaVoz: "¿Seguía el accidente?" },
+  manifestacion: { ico: "📢", nom: "MANIFESTACIÓN", voz: "Manifestación", seguia: "¿SEGUÍA LA MANIFESTACIÓN?", seguiaVoz: "¿Seguía la manifestación?" },
+};
 const POL_SEG = 3600;          // se muestra 1 hora (igual que en el servidor)
 const POL_CADA_MS = 60000;     // cada cuánto se preguntan los controles
 const POL_ANTES_S = 60;        // se avisa 1 minuto antes de llegar...
@@ -635,13 +656,13 @@ async function polTraer() {
   if (typeof SIMULACION !== "undefined" || !ultimoFix || navigator.onLine === false) return;
   try {
     const ctl = new AbortController(), corte = setTimeout(() => ctl.abort(), 15000);
-    const r = await fetch(POL_URL + "/controles?la=" + ultimoFix.la.toFixed(4) + "&lo=" + ultimoFix.lo.toFixed(4), { cache: "no-store", signal: ctl.signal });
+    const r = await fetch(POL_URL + "/eventos?la=" + ultimoFix.la.toFixed(4) + "&lo=" + ultimoFix.lo.toFixed(4), { cache: "no-store", signal: ctl.signal });
     clearTimeout(corte);
     if (!r.ok) return;
     const d = await r.json(), dif = Date.now() / 1000 - d.ahora;   // por si la hora del celular no es la del servidor
     const no = polBorrados().map(function (x) { return x.id; });
-    POL = d.controles.filter(function (k) { return no.indexOf(k.id) < 0; })
-      .map(function (k) { return { id: k.id, la: k.la, lo: k.lo, t: k.creado + dif }; });
+    POL = d.eventos.filter(function (k) { return no.indexOf(k.id) < 0 && EN_VIVO[k.tipo]; })
+      .map(function (k) { return { id: k.id, tipo: k.tipo, la: k.la, lo: k.lo, t: k.creado + dif }; });
   } catch (e) {}
   polNoMandar();
 }
@@ -659,7 +680,7 @@ function polRevisar(p, kmh, rumbo) {
       if (d < polActual.dMin) polActual.dMin = d;
       if ((atras && d < 300) || d > polActual.dMin + 150) {
         polActual.pasado = ahora;
-        if (!camActual) decir("¿Seguía el control? Si ya no estaba, tocá ya no está");   // v18: cada cartel tiene su voz
+        if (!camActual) decir((EN_VIVO[k.tipo] || EN_VIVO.policial).seguiaVoz + " Si ya no estaba, tocá ya no está");   // v18: cada cartel tiene su voz
       }
     }
     if (polActual.pasado && (ahora - polActual.pasado > POL_DESPUES_MS || d > POL_MAX_M)) { polCerrar(); return; }
@@ -679,17 +700,19 @@ function polRevisar(p, kmh, rumbo) {
   if (!mejor) return;
   polActual = { id: mejor.id, dMin: mejorD, pasado: 0 };
   polVistos[mejor.id] = ahora;
-  if (!camActual) decir("Policía de tránsito a " + metrosTexto(mejorD));   // si está hablando de una cámara, no la corta
+  if (!camActual) decir((EN_VIVO[mejor.tipo] || EN_VIVO.policial).voz + " a " + metrosTexto(mejorD));   // si está hablando de una cámara, no la corta
   polMostrar(mejor, mejorD);
 }
 function polMostrar(k, d) {
-  $("pol").className = camActual ? "" : "on";   // si hay una cámara, se ve la cámara (el rojo titila y se transparentaba)
+  const e = EN_VIVO[k.tipo] || EN_VIVO.policial;
+  $("pol").className = camActual ? "" : "on t-" + (k.tipo || "policial");   // si hay una cámara, se ve la cámara (el rojo titila y se transparentaba)
+  $("pol-ico").textContent = e.ico;
   const min = Math.max(1, Math.round((Date.now() / 1000 - k.t) / 60));
   if (polActual.pasado) {
-    $("pol-t1").textContent = "¿SEGUÍA EL CONTROL?";
+    $("pol-t1").textContent = e.seguia;
     $("pol-t2").textContent = "Si ya no estaba, tocá YA NO ESTÁ";
   } else {
-    $("pol-t1").textContent = "POLICÍA DE TRÁNSITO a " + (d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m");
+    $("pol-t1").textContent = e.nom + " a " + (d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m");
     $("pol-t2").textContent = "Avisado hace " + min + " min";
   }
 }
@@ -835,8 +858,9 @@ function viajeACero() {
   $("dist").textContent = "0.00"; $("max").textContent = "0"; $("prom").textContent = "0";
   $("tiempo").textContent = "00:00:00";
 }
-function botonViaje(estado, texto) { $("btnViaje").className = estado; $("btnViaje").textContent = texto; }
-$("btnViaje").onclick = () => {
+// v21: el botón de viaje se sacó (pedido de los usuarios); queda el código por si se vuelve a poner
+function botonViaje(estado, texto) { if ($("btnViaje")) { $("btnViaje").className = estado; $("btnViaje").textContent = texto; } }
+if ($("btnViaje")) $("btnViaje").onclick = () => {
   pedirWakeLock();
   if (!viajeOn) {                         // verde → iniciar
     viajeACero(); viajeOn = true;
@@ -934,7 +958,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v20-1";
+const APP_VERSION = "infocam-v21-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;
@@ -1085,7 +1109,7 @@ function rtMostrar(g) {
         (c.dos ? " · una para cada mano" : "") + '</small></div></div>';
     }).join("") +
     '<p style="color:#aaa;font-size:15px;margin-top:14px">En el viaje las cámaras se avisan solas, aunque no haya señal. ' +
-    'Los km son desde la salida. Puede haber cámaras nuevas que todavía no están en la lista: si ves una, tocá AVISAR CÁMARA.</p>' +
+    'Los km son desde la salida. Puede haber cámaras nuevas que todavía no están en la lista: si ves una, tocá INFORMAR CÁMARA.</p>' +
     '<button class="azul" id="rt-otra">OTRA RUTA</button><button class="gris" id="rt-cerrar">CERRAR</button>';
   $("rt-otra").onclick = function () { rtForm(""); };
   $("rt-cerrar").onclick = rtCerrar;
