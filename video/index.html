@@ -34,6 +34,8 @@
   #btnRuta { position: absolute; top: 50%; left: 6%; right: 6%; transform: translateY(-50%); display: none;
     background: #0b2a3d; color: #9be7ff; border: 2px solid #00b7ff; border-radius: calc(var(--u) * 3);
     font-size: calc(var(--u) * 4.6); font-weight: 800; padding: calc(var(--u) * 3.2) calc(var(--u) * 2); }
+  #btnRuta small { display: block; font-size: .68em; font-weight: 600; color: #7fb8d0; margin-top: .25em; }   /* v22: es opcional */
+  #btnRuta { white-space: normal; line-height: 1.25; }
   #btnRuta.ver { display: block; }
   #ruta { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 35; background: #000; flex-direction: column; }
   #ruta.on { display: flex; }
@@ -121,18 +123,23 @@
   #btnViaje.verde { background: #1a9e45; }
   #btnViaje.naranja { background: #f08a00; color: #000; }
   #btnViaje.rojo { background: #e00000; }
-  #btnAviso { flex: 0.85; background: #1565c0; }
+  #btnAviso { flex: 1; background: #1565c0; font-size: calc(var(--u) * 5.6); padding: calc(var(--u) * 4) calc(var(--u) * 1); }   /* v22: como la app v21 */
 
   /* Ventana de AVISAR CÁMARA (como en la app) */
+  /* v22: en 2 columnas, como la app v21 (abajo queda lugar para la franja celeste) */
   #aviso { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
-    flex-direction: column; align-items: stretch; justify-content: center; gap: calc(var(--u) * 2.8); padding: calc(var(--u) * 5) calc(var(--u) * 5) calc(var(--u) * 34); text-align: center; }   /* v20: abajo queda lugar para la franja celeste */
-  #aviso.on { display: flex; }
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: center; gap: calc(var(--u) * 2.6);
+    padding: calc(var(--u) * 4) calc(var(--u) * 4) calc(var(--u) * 32); text-align: center; }
+  #aviso.on { display: grid; }
+  #aviso .tit, #aviso .sub, #aviso .ancho { grid-column: 1 / -1; }
   #aviso .tit { font-size: calc(var(--u) * 7); font-weight: 800; }
   #aviso .sub { font-size: calc(var(--u) * 4.5); color: #bbb; }
-  #aviso button { flex: none; white-space: normal; font-size: calc(var(--u) * 6.3); font-weight: 800; padding: calc(var(--u) * 3.6) calc(var(--u) * 2); border-radius: calc(var(--u) * 3.5); border: none; }
+  #aviso button { flex: none; white-space: normal; min-width: 0; line-height: 1.15; font-size: calc(var(--u) * 5.8); font-weight: 800; padding: calc(var(--u) * 3.2) calc(var(--u) * 1.5); border-radius: calc(var(--u) * 3.5); border: none; }
   #av-fija { background: #ff8c00; color: #000; }
   #av-movil { background: #2f8cff; color: #fff; }
   #av-policial { background: #8e24aa; color: #fff; }   /* v20: igual que la app v19 */
+  #av-accidente { background: #e53935; color: #fff; }   /* v22: como la app v21 */
+  #av-manifestacion { background: #00897b; color: #fff; }
   #aviso button small { display: block; font-size: calc(var(--u) * 4); font-weight: 600; }
   #av-cancelar { background: #333; color: #ff5252; font-size: calc(var(--u) * 4.6) !important; padding: calc(var(--u) * 3) !important; border: 3px solid #e00000 !important; }
   #av-yanoesta { background: #fff; color: #6a1b9a; font-size: calc(var(--u) * 4.6) !important; padding: calc(var(--u) * 3) !important; border: 3px solid #e00000 !important; }
@@ -182,7 +189,7 @@
 
   <div id="slot">
     <div id="siminfo"></div>
-    <button id="btnRuta" class="ver">🗺 CÁMARAS DE MI RUTA</button>
+    <button id="btnRuta" class="ver">🗺 ¿HAY CÁMARAS HASTA MI DESTINO?<small>(opcional · InfoCam te avisa igual)</small></button>
     <div id="cam"><div class="ico">📷</div>
       <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
       <div class="max" id="cam-max">--</div></div>
@@ -236,21 +243,22 @@
   <div id="narra"></div>
 
   <div class="btns">
-    <button id="btnAviso">📷 AVISAR CÁMARA</button>
-    <button id="btnViaje" class="verde">▶ INICIAR VIAJE</button>
+    <button id="btnAviso">📷 INFORMAR CÁMARA</button>   <!-- v22: como la app v21 (sin botón de viaje) -->
   </div>
 
   <div id="aviso">
     <div class="tit">📷 ¿Qué viste?</div>
     <div class="sub" id="av-sub">ANOTADO</div>
-    <button id="av-fija">CÁMARA FIJA</button>
-    <button id="av-movil">CONTROL DE TRÁNSITO<small>(cámara móvil)</small></button>
-    <button id="av-policial">POLICÍA DE TRÁNSITO<small>(documentos, alcoholemia)</small></button>
-    <button id="av-cancelar">ME EQUIVOQUÉ, NO INFORMAR</button>
-    <button id="av-yanoesta">EL CONTROL YA NO ESTÁ</button>
+    <button id="av-fija">📷<br>CÁMARA FIJA</button>
+    <button id="av-movil">🚐<br>CÁMARA MÓVIL</button>
+    <button id="av-policial">🚓<br>POLICÍA DE TRÁNSITO</button>
+    <button id="av-accidente">💥<br>ACCIDENTE</button>
+    <button id="av-manifestacion" class="ancho">📢 MANIFESTACIÓN</button>
+    <button id="av-cancelar" class="ancho">ME EQUIVOQUÉ, NO INFORMAR</button>
+    <button id="av-yanoesta" class="ancho">EL EVENTO YA NO ESTÁ</button>
   </div>
 
-  <div id="ruta"><div class="cab"><span>🗺 CÁMARAS DE MI RUTA</span><b>✕</b></div><div id="rt-cuerpo"></div></div>
+  <div id="ruta"><div class="cab"><span>🗺 CÁMARAS HASTA MI DESTINO</span><b>✕</b></div><div id="rt-cuerpo"></div></div>
   <div id="salir-cartel"><div class="caja"><b>SALIENDO…</b><p>Mantené el dedo apretado.<br>Soltá para no salir.</p><div id="salir-barra"><i></i></div></div></div>
   <div id="mano">👆</div>
 
@@ -380,12 +388,15 @@ function avisoCerrar(tipo) {
   clearInterval(avisoTimer);
   $("aviso").className = "";
   if (avisoPend && tipo)   // lo mismo que dice la app v19 (en el video no se manda nada)
-    decir(tipo === "policial" ? "Gracias, policía de tránsito avisada" : tipo === "movil" ? "Gracias, control de tránsito anotado" : tipo === "?" ? "Informado" : "Gracias, cámara anotada");
+    decir({ policial: "Gracias, policía de tránsito avisada", movil: "Gracias, cámara móvil anotada", accidente: "Gracias, accidente avisado",
+      manifestacion: "Gracias, manifestación avisada", "?": "Informado" }[tipo] || "Gracias, cámara anotada");   // v22: como la app v21
   avisoPend = null;
 }
 $("av-fija").onclick = () => avisoCerrar("fija");
 $("av-movil").onclick = () => avisoCerrar("movil");
 $("av-policial").onclick = () => avisoCerrar("policial");
+$("av-accidente").onclick = () => avisoCerrar("accidente");
+$("av-manifestacion").onclick = () => avisoCerrar("manifestacion");
 $("av-yanoesta").onclick = () => avisoCerrar(null);
 $("av-cancelar").onclick = () => { avisoCerrar(null); decir("No informado"); };
 
@@ -508,14 +519,10 @@ setInterval(() => {
   $("tiempo").textContent = `${hh}:${mm}:${ss}`;
 }, 250);
 
-// Botón del viaje: VERDE "INICIAR VIAJE" → NARANJA "REINICIAR VIAJE" (como en la app)
-function botonViaje(estado, texto) { $("btnViaje").className = estado; $("btnViaje").textContent = texto; }
-$("btnViaje").onclick = () => {
-  if (!viajeOn) {
-    distKm = 0; maxKmh = 0; tMov = 0; inicio = ultimo ? ultimo.t : Date.now(); viajeOn = true;
-    botonViaje("naranja", "↻ REINICIAR VIAJE");
-  }
-};
+// v22: ya no hay botón de viaje (como la app v21): el guion llama a esto justo antes de arrancar el auto
+function viajeEmpezar() {
+  distKm = 0; maxKmh = 0; tMov = 0; inicio = ultimo ? ultimo.t : Date.now(); viajeOn = true;
+}
 </script>
 </body>
 </html>

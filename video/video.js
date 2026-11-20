@@ -171,7 +171,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await narrar('Comenzamos desde <b>Samborombón</b>, por la <b>Ruta 2</b>, rumbo a <b>Pinamar</b>.');
 
     // v15: antes de salir, CÁMARAS DE MI RUTA
-    const n0 = narrar('Antes de salir, tocá <span class="az">🗺 CÁMARAS DE MI RUTA</span> y escribí adónde vas.');
+    const n0 = narrar('Si querés saber qué cámaras hay hasta tu destino, tocá <span class="az">🗺 ¿HAY CÁMARAS HASTA MI DESTINO?</span>');
     await espera(400);
     rtForm();
     await tocar($('btnRuta'));
@@ -195,11 +195,9 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await espera(500);
     await tocar($('rt-cerrar'));
     $('ruta').className = '';
-    const n1 = narrar('En la app, tocá <span class="ve">INICIAR VIAJE</span>.');
-    await espera(500);
-    await tocar($('btnViaje'));
+    await narrar('<b>No hace falta hacerlo:</b> InfoCam te avisa igual cada cámara en el camino.');   // v22: es opcional (Ricar)
     manoFuera();
-    await n1;
+    viajeEmpezar();   // v22: sin botón de viaje (como la app v21): cuenta desde que arranca
 
     S.obj = 110; S.x = 8;
     await narrar('Los números cambian de color con la velocidad. Arriba está la <b>referencia</b>.');
@@ -219,17 +217,17 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
 
     // Avisar una cámara que no estaba en la lista
     S.x = 2;
-    const n2 = narrar('¿Ves una cámara que InfoCam no tiene? Tocá <span class="az">📷 AVISAR CÁMARA</span>.');
+    const n2 = narrar('¿Ves una cámara que InfoCam no tiene? Tocá <span class="az">📷 INFORMAR CÁMARA</span>.');
     await espera(1800);
     await tocar($('btnAviso'));
     await n2;
-    const n3 = narrar('Elegís qué viste: <b>cámara fija</b>, <b>control de tránsito</b> o <b>policía de tránsito</b>.');
+    const n3 = narrar('Elegís qué viste: <b>cámara</b>, <b>policía</b>, <b>accidente</b> o <b>manifestación</b>.');
     await espera(600);
     await tocar($('av-fija'));
     manoFuera();
     await n3;
     await silencio();   // "Gracias, cámara anotada" (la app)
-    await narrar('Así, <b>entre todos</b>, completamos la lista.');
+    await narrar('Así, <b>entre todos</b>, nos avisamos a los que vienen atrás.');
 
     // Segunda cámara, yendo pasado
     S.obj = 125; S.x = 80;

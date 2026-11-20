@@ -54,6 +54,7 @@
   #btnRuta { position: absolute; top: 50%; left: 6%; right: 6%; transform: translateY(-50%); display: none;
     background: #0b2a3d; color: #9be7ff; border: 2px solid #00b7ff; border-radius: calc(var(--u) * 3);
     font-size: calc(var(--u) * 4.6); font-weight: 800; padding: calc(var(--u) * 3.2) calc(var(--u) * 2); }
+  #btnRuta small { display: block; font-size: .68em; font-weight: 600; color: #7fb8d0; margin-top: .25em; }   /* v22: es opcional */
   #btnRuta.ver { display: block; }
   #ruta { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 35; background: #000;
     flex-direction: column; }
@@ -217,7 +218,7 @@
 <div id="salir-cartel"><div class="caja"><b>SALIENDO…</b><p>Mantené el dedo apretado.<br>Soltá para no salir.</p><div id="salir-barra"><i></i></div></div></div>
 <div id="salido"><b>Saliste de InfoCam</b><p>Ya no avisa cámaras. Podés cerrar esta ventana.</p><button id="salido-volver">VOLVER A INFOCAM</button></div>
 <!-- v13: ventana CÁMARAS DE MI RUTA -->
-<div id="ruta"><div class="cab"><span>🗺 CÁMARAS A MI DESTINO</span><b id="rt-x">✕</b></div><div id="rt-cuerpo"></div></div>
+<div id="ruta"><div class="cab"><span>🗺 CÁMARAS HASTA MI DESTINO</span><b id="rt-x">✕</b></div><div id="rt-cuerpo"></div></div>
 <div class="wrap">
   <div class="top">
     <button id="btnSalir" oncontextmenu="return false"><i id="salir-lleno"></i><span>SALIR</span></button>
@@ -227,7 +228,7 @@
   </div>
 
   <div id="slot"><div id="slot-txt"></div>
-    <button id="btnRuta" class="ver">🗺 CÁMARAS A MI DESTINO</button>
+    <button id="btnRuta" class="ver">🗺 ¿HAY CÁMARAS HASTA MI DESTINO?<small>(opcional · InfoCam te avisa igual)</small></button>
     <div id="cam"><div class="ico">📷</div>
       <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
       <div class="max" id="cam-max">--</div></div>
@@ -958,7 +959,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v21-1";
+const APP_VERSION = "infocam-v22-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;
