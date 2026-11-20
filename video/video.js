@@ -133,39 +133,24 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await espera(ms + 300);
     $('mano').classList.remove('aprieta');
   }
-  // v15: CÁMARAS DE MI RUTA con el recorrido de la simulación (sin pedir nada a internet)
-  function rtCamaras() {
-    if (typeof CAMARAS === 'undefined') return [];
-    const r = Math.PI / 180, kx = Math.cos(RUTA[0][0] * r) * 111320, ky = 110540, res = [];
-    for (let c = 0; c < CAMARAS.length; c++) {
-      const k = CAMARAS[c];
-      if (k[0] > -35.28 || k[0] < -35.56 || k[1] < -58.08 || k[1] > -57.98) continue;
-      let mejor = 1e9, enM = 0;
-      for (let i = 1; i < RUTA.length; i++) {
-        const ax = RUTA[i - 1][1] * kx, ay = RUTA[i - 1][0] * ky, bx = RUTA[i][1] * kx, by = RUTA[i][0] * ky;
-        const px = k[1] * kx, py = k[0] * ky, dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy || 1;
-        let t = ((px - ax) * dx + (py - ay) * dy) / L; t = t < 0 ? 0 : t > 1 ? 1 : t;
-        const d = Math.hypot(px - ax - t * dx, py - ay - t * dy);
-        if (d < mejor) { mejor = d; enM = acum[i - 1] + t * (acum[i] - acum[i - 1]); }
-      }
-      if (mejor <= 60) res.push({ km: enM / 1000, max: k[2] || 0, lugar: k[3] || '', ruta: k[4] || '' });
-    }
-    return res.sort((a, b) => a.km - b.km);
-  }
+  // v20: CÁMARAS DE MI RUTA hasta PINAMAR (pedido de Ricar: un viaje de verdad). Calculado el 20-nov-2026 igual que la app
+  // (servidor /ruta desde la largada de la simulación + cámaras a ≤60 m, juntando las de cada mano). Fijo: no pide nada a internet.
+  const RT_PINAMAR = {"km": 265.5, "min": 191, "cams": [{"km": 7.7, "max": 120, "lugar": "El Mirador", "ruta": "RP 2"}, {"km": 17.1, "max": 80, "lugar": "Chascomús", "ruta": "RP 2"}, {"km": 26.8, "max": 100, "lugar": "Chascomús", "ruta": "RP 2"}, {"km": 27.3, "max": 80, "lugar": "Chascomús", "ruta": "RP 2"}, {"km": 29.6, "max": 80, "lugar": "Chascomús", "ruta": "RP 2"}, {"km": 31.1, "max": 100, "lugar": "Chascomús", "ruta": "RP 2"}, {"km": 66.2, "max": 120, "lugar": "Lezama", "ruta": "RP 2"}, {"km": 69.9, "max": 60, "lugar": "Lezama", "ruta": "RP 2"}, {"km": 93.3, "max": 80, "lugar": "Centro Guerrero", "ruta": "RP 2", "dos": true}, {"km": 95.7, "max": 80, "lugar": "Castelli", "ruta": "RP 2", "dos": true}, {"km": 109.6, "max": 80, "lugar": "Sevigné", "ruta": "RP 2", "dos": true}, {"km": 116.8, "max": 100, "lugar": "Dolores", "ruta": "RP 2", "dos": true}, {"km": 121.1, "max": 60, "lugar": "Dolores", "ruta": "RP 63", "dos": true}, {"km": 129.1, "max": 110, "lugar": "Dolores", "ruta": "RP 63"}, {"km": 134.2, "max": 110, "lugar": "Dolores", "ruta": "RP 63"}, {"km": 168.6, "max": 110, "lugar": "Villa Roch", "ruta": "RP 11"}, {"km": 174, "max": 80, "lugar": "General Conesa", "ruta": "RP 11", "dos": true}, {"km": 238.8, "max": 60, "lugar": "General Madariaga", "ruta": "RP 74"}, {"km": 243.7, "max": 110, "lugar": "General Madariaga", "ruta": "RP 74"}]};
+  function rtTiempo(min) { const h = Math.floor(min / 60), m = min % 60; return h ? h + ' h ' + (m < 10 ? '0' : '') + m + ' min' : m + ' min'; }
   function rtForm() {
     $('rt-cuerpo').innerHTML = '<div class="lbl">¿ADÓNDE VAS?</div><div class="campo vacio" id="rt-hasta">Ej.: Mar del Plata</div>' +
       '<button class="azul" id="rt-buscar">BUSCAR</button>' +
       '<div class="lbl">SALGO DESDE</div><div><span class="desde">📍 Donde estoy ahora</span></div><div id="rt-lugares"></div>';
   }
   function rtLugares() {
-    $('rt-lugares').innerHTML = '<div class="lbl">ELEGÍ EL LUGAR</div><button class="lug" id="rt-lug">Chascomús<small>Partido de Chascomús, Buenos Aires</small></button>';
+    $('rt-lugares').innerHTML = '<div class="lbl">ELEGÍ EL LUGAR</div><button class="lug" id="rt-lug">Pinamar<small>Partido de Pinamar, Buenos Aires</small></button>';
   }
   function rtLista() {
-    const cams = rtCamaras(), km = Math.round(total / 1000);
-    $('rt-cuerpo').innerHTML = '<div class="rt-res"><div class="dest">Chascomús</div><div>' + km + ' km · unas ' + Math.round(km / 85 * 60) +
-      ' min de manejo</div><div class="tot">' + cams.length + ' cámaras en el camino</div></div>' +
-      cams.map(c => '<div class="rt-cam"><div class="km">' + Math.round(c.km) + '<small>km</small></div><div class="mx">' + (c.max || '?') +
-        '</div><div class="lu">' + c.ruta + '<small>' + c.lugar + '</small></div></div>').join('') +
+    const g = RT_PINAMAR, cams = g.cams;   // igual que rtMostrar() de la app
+    $('rt-cuerpo').innerHTML = '<div class="rt-res"><div class="dest">Pinamar</div><div>' + Math.round(g.km) + ' km · unas ' + rtTiempo(g.min) +
+      ' de manejo</div><div class="tot">' + cams.length + ' cámaras en el camino</div></div>' +
+      cams.map(c => '<div class="rt-cam"><div class="km">' + (c.km < 1 ? '0' : Math.round(c.km)) + '<small>km</small></div><div class="mx">' + (c.max || '?') +
+        '</div><div class="lu">' + c.ruta + '<small>' + c.lugar + (c.dos ? ' · una para cada mano' : '') + '</small></div></div>').join('') +
       '<button class="gris" id="rt-cerrar">CERRAR</button>';
   }
 
@@ -183,7 +168,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await espera(600);
 
     // Audio 1
-    await narrar('Comenzamos desde <b>Samborombón</b>, por la <b>Ruta 2</b>, hacia <b>Chascomús</b>.');
+    await narrar('Comenzamos desde <b>Samborombón</b>, por la <b>Ruta 2</b>, rumbo a <b>Pinamar</b>.');
 
     // v15: antes de salir, CÁMARAS DE MI RUTA
     const n0 = narrar('Antes de salir, tocá <span class="az">🗺 CÁMARAS DE MI RUTA</span> y escribí adónde vas.');
@@ -192,7 +177,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await tocar($('btnRuta'));
     $('ruta').className = 'on';
     await espera(500);
-    await escribir($('rt-hasta'), 'Chascomús');
+    await escribir($('rt-hasta'), 'Pinamar');
     await tocar($('rt-buscar'));
     rtLugares();
     await espera(400);
@@ -200,7 +185,13 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     rtLista();
     manoFuera();
     await n0;
+    // v20: mientras lo dice, la lista baja despacio para que se vean las 19 cámaras
+    const cu = $('rt-cuerpo'); cu.scrollTop = 0;
+    let baja = null;
+    setTimeout(() => { baja = setInterval(() => { cu.scrollTop += 2; }, 16 / RAP); }, 1800 / RAP);   // primero se ve "Pinamar · 266 km · 19 cámaras"
     await narrar('Te muestra las cámaras del camino y la <b>máxima</b> de cada una.');
+    await espera(1200);
+    clearInterval(baja); cu.scrollTop = cu.scrollHeight;
     await espera(500);
     await tocar($('rt-cerrar'));
     $('ruta').className = '';
@@ -232,7 +223,7 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await espera(1800);
     await tocar($('btnAviso'));
     await n2;
-    const n3 = narrar('Elegís: <b>cámara fija</b> o <b>control móvil</b>.');
+    const n3 = narrar('Elegís qué viste: <b>cámara fija</b>, <b>control de tránsito</b> o <b>policía de tránsito</b>.');
     await espera(600);
     await tocar($('av-fija'));
     manoFuera();

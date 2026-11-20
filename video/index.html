@@ -125,14 +125,17 @@
 
   /* Ventana de AVISAR CÁMARA (como en la app) */
   #aviso { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
-    flex-direction: column; align-items: stretch; justify-content: center; gap: calc(var(--u) * 3.5); padding: calc(var(--u) * 5); text-align: center; }
+    flex-direction: column; align-items: stretch; justify-content: center; gap: calc(var(--u) * 2.8); padding: calc(var(--u) * 5) calc(var(--u) * 5) calc(var(--u) * 34); text-align: center; }   /* v20: abajo queda lugar para la franja celeste */
   #aviso.on { display: flex; }
   #aviso .tit { font-size: calc(var(--u) * 7); font-weight: 800; }
   #aviso .sub { font-size: calc(var(--u) * 4.5); color: #bbb; }
-  #aviso button { flex: none; white-space: normal; font-size: calc(var(--u) * 6.5); padding: calc(var(--u) * 5) calc(var(--u) * 2); border-radius: calc(var(--u) * 3.5); }
+  #aviso button { flex: none; white-space: normal; font-size: calc(var(--u) * 6.3); font-weight: 800; padding: calc(var(--u) * 3.6) calc(var(--u) * 2); border-radius: calc(var(--u) * 3.5); border: none; }
   #av-fija { background: #ff8c00; color: #000; }
   #av-movil { background: #2f8cff; color: #fff; }
-  #av-cancelar { background: #333; color: #ddd; font-size: calc(var(--u) * 4.5) !important; padding: calc(var(--u) * 3) !important; }
+  #av-policial { background: #8e24aa; color: #fff; }   /* v20: igual que la app v19 */
+  #aviso button small { display: block; font-size: calc(var(--u) * 4); font-weight: 600; }
+  #av-cancelar { background: #333; color: #ff5252; font-size: calc(var(--u) * 4.6) !important; padding: calc(var(--u) * 3) !important; border: 3px solid #e00000 !important; }
+  #av-yanoesta { background: #fff; color: #6a1b9a; font-size: calc(var(--u) * 4.6) !important; padding: calc(var(--u) * 3) !important; border: 3px solid #e00000 !important; }
 
   /* Dedito que toca los botones */
   #mano { position: absolute; z-index: 60; font-size: calc(var(--u) * 15); line-height: 1; pointer-events: none;
@@ -239,10 +242,12 @@
 
   <div id="aviso">
     <div class="tit">📷 ¿Qué viste?</div>
-    <div class="sub" id="av-sub">Ya quedó anotado el lugar</div>
+    <div class="sub" id="av-sub">ANOTADO</div>
     <button id="av-fija">CÁMARA FIJA</button>
-    <button id="av-movil">CONTROL MÓVIL<br><span style="font-size:.6em;font-weight:600">(radar de policía o tránsito)</span></button>
-    <button id="av-cancelar">ME EQUIVOQUÉ, NO MANDAR</button>
+    <button id="av-movil">CONTROL DE TRÁNSITO<small>(cámara móvil)</small></button>
+    <button id="av-policial">POLICÍA DE TRÁNSITO<small>(documentos, alcoholemia)</small></button>
+    <button id="av-cancelar">ME EQUIVOQUÉ, NO INFORMAR</button>
+    <button id="av-yanoesta">EL CONTROL YA NO ESTÁ</button>
   </div>
 
   <div id="ruta"><div class="cab"><span>🗺 CÁMARAS DE MI RUTA</span><b>✕</b></div><div id="rt-cuerpo"></div></div>
@@ -360,24 +365,29 @@ $("btnAviso").onclick = () => {
   if (!ultimoFix) return;
   avisoPend = { la: ultimoFix.la, lo: ultimoFix.lo };
   $("aviso").className = "on";
+  decir("¿Qué viste?");   // como la app v19
   let quedan = AVISO_SEG;
-  $("av-sub").textContent = "Ya quedó anotado el lugar · " + quedan;
+  $("av-sub").textContent = "ANOTADO";
+  $("av-cancelar").textContent = "ME EQUIVOQUÉ, NO INFORMAR (" + quedan + ")";
   clearInterval(avisoTimer);
   avisoTimer = setInterval(() => {
     quedan--;
-    $("av-sub").textContent = "Ya quedó anotado el lugar · " + quedan;
+    $("av-cancelar").textContent = "ME EQUIVOQUÉ, NO INFORMAR (" + quedan + ")";
     if (quedan <= 0) avisoCerrar("?");
   }, 1000);
 };
 function avisoCerrar(tipo) {
   clearInterval(avisoTimer);
   $("aviso").className = "";
-  if (avisoPend && tipo) decir("Gracias, cámara anotada");   // lo mismo que dice la app
+  if (avisoPend && tipo)   // lo mismo que dice la app v19 (en el video no se manda nada)
+    decir(tipo === "policial" ? "Gracias, policía de tránsito avisada" : tipo === "movil" ? "Gracias, control de tránsito anotado" : tipo === "?" ? "Informado" : "Gracias, cámara anotada");
   avisoPend = null;
 }
 $("av-fija").onclick = () => avisoCerrar("fija");
 $("av-movil").onclick = () => avisoCerrar("movil");
-$("av-cancelar").onclick = () => avisoCerrar(null);
+$("av-policial").onclick = () => avisoCerrar("policial");
+$("av-yanoesta").onclick = () => avisoCerrar(null);
+$("av-cancelar").onclick = () => { avisoCerrar(null); decir("No informado"); };
 
 // ===== AVISO DE CÁMARAS DE VELOCIDAD (igual que la app) =====
 const CAM_ANGULO = 30, CAM_SEG = 30, CAM_MIN_M = 400, CAM_MAX_M = 1200, CAM_TOLERANCIA = 0;
