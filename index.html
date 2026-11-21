@@ -311,7 +311,7 @@ function medir() {
   const w = window.innerWidth, h = window.innerHeight - (cl.contains("conact") ? 66 : cl.contains("coninst") ? 56 : 0);
   const u = w > h ? Math.min(w / 210, h / 88) : Math.min(w / 100, h / 152);
   // los números de la velocidad usan el lugar que sobra (celulares largos): entre 26 y 48 "u" parado, 20 y 40 acostado
-  const alto = h / u, n = w > h ? Math.max(20, Math.min(40, alto - 52)) : Math.max(26, Math.min(48, alto - 137));
+  const alto = h / u, n = w > h ? Math.max(20, Math.min(40, alto - 52)) : Math.max(26, Math.min(42, alto - 137))   /* v24: máx. 42 (con 48, "188" ocupaba todo el ancho y se cortaba) */;
   const wr = document.querySelector(".wrap");
   wr.style.setProperty("--u", u + "px"); wr.style.setProperty("--n", n);
 }
@@ -959,7 +959,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v23-1";
+const APP_VERSION = "infocam-v24-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;

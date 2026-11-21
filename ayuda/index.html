@@ -34,6 +34,7 @@
   .am { background: #ffb300; color: #000; } .ro { background: #ff1a1a; color: #fff; } .az { background: #1565c0; color: #fff; }
   .ve { background: #1a9e45; color: #fff; } .na { background: #f08a00; color: #000; } .gr { background: #333; color: #ddd; }
   .nm { background: #ff8c00; color: #000; } .mo { background: #2f8cff; color: #fff; } .po { background: #8e24aa; color: #fff; } .bl { background: #fff; color: #6a1b9a; }
+  .ac { background: #e53935; color: #fff; } .ma { background: #00897b; color: #fff; } .de { background: #0b2a3d; color: #9be7ff; border: 1px solid #00b7ff; }   /* v24 */
   .ojo { background: #1c1608; border: 1px solid #5a4500; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
   .colores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; }
   .colores > div { background: #000; border: 1px solid #333; border-radius: 10px; text-align: center; padding: 8px 2px; }
@@ -49,13 +50,17 @@
 <div class="bajada">Avisa las cámaras de control de velocidad · Evite multas</div>
 <p>Es un velocímetro en el celular que <b>te avisa con voz y con un cartel antes de llegar a una cámara de control de velocidad</b>,
 y te dice la velocidad máxima. Se abre como una página y usa el GPS del celular. Para dejarlo como ícono, tocá la franja celeste <b>INSTALAR INFOCAM</b> de arriba.</p>
+<p><b>Es gratis, no pide tus datos y funciona sin internet.</b></p>
 
 <div class="botones">
   <a class="ir" href="../">▶ ABRIR INFOCAM</a>
-  <a class="ver" href="../simulacion/">Ver cómo avisa (simulación)</a>
+  <a class="ver" href="../video/">Ver el video de cómo funciona</a>
 </div>
 
 <h2><span class="n">1</span>Para empezar</h2>
+<div class="con-foto">
+  <img src="cap_inicio.png" alt="Pantalla de InfoCam parado: velocidad 0 y el botón ¿Hay cámaras hasta mi destino?">
+  <div>
 <ol>
   <li>Abrí el link en <b>Chrome</b> (Android) o en <b>Safari</b> (iPhone).</li>
   <li>Cuando pregunte por la <b>ubicación</b>, tocá <b>Permitir</b>. Sin eso no hay GPS.</li>
@@ -63,6 +68,9 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
     En el iPhone además pregunta por "movimiento y orientación": tocá <b>Permitir</b>.</li>
   <li>Arriba a la izquierda tiene que decir <span class="chip ve">● GPS OK</span>. Listo: ya avisa.</li>
 </ol>
+<p>La distancia, la máxima, el promedio y el tiempo empiezan a contar solos desde que abrís InfoCam.</p>
+  </div>
+</div>
 
 <h2><span class="n">2</span>Los colores de la velocidad</h2>
 <p>Los números grandes de la velocidad <b>cambian de color</b> según lo rápido que vas, para darte cuenta de un vistazo:</p>
@@ -101,39 +109,57 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
   </div>
 </div>
 
-<h2><span class="n">4</span>El viaje</h2>
-<p>El botón grande de abajo a la derecha maneja los datos del viaje (distancia, máxima, promedio y tiempo):</p>
-<ul>
-  <li><span class="chip ve">▶ INICIAR VIAJE</span> empieza a contar.</li>
-  <li><span class="chip na">↻ REINICIAR VIAJE</span> aparece con el viaje en marcha. Tocándolo se pone
-    <span class="chip ro">rojo</span>: <b>tocá el rojo</b> para poner todo en cero. Si no lo tocás, en 4 segundos vuelve a naranja
-    (así un toque sin querer no borra nada).</li>
-</ul>
-<p>Los avisos de cámaras andan aunque no inicies el viaje.</p>
-
-<h2><span class="n">5</span>¿Pasaste una cámara que no avisó? Avisanos</h2>
+<h2><span class="n">4</span>¿Hay cámaras hasta mi destino? (opcional)</h2>
 <div class="con-foto">
-  <img src="cap_ventana.png" alt="Ventana: cámara fija, control móvil, me equivoqué">
+  <img src="cap_destino.png" alt="Lista de cámaras hasta Pinamar: 266 km, 19 cámaras">
+  <div>
+    <p>Antes de salir, si querés saber qué cámaras hay en el camino, tocá <span class="chip de">🗺 ¿HAY CÁMARAS HASTA MI DESTINO?</span>
+      (aparece arriba sólo cuando estás parado).</p>
+    <ol>
+      <li>Escribí adónde vas (por ejemplo <b>Pinamar</b>) y tocá <b>BUSCAR</b>.</li>
+      <li>Elegí el lugar de la lista.</li>
+      <li>Te muestra los km del viaje, el tiempo y <b>todas las cámaras del camino en orden</b>: a cuántos km de la salida está
+        cada una, la máxima, la ruta y el lugar.</li>
+    </ol>
+    <p><b>No hace falta hacerlo:</b> InfoCam te avisa igual cada cámara en el camino. Para buscar el destino hace falta internet;
+      la última lista queda guardada y se ve sin señal.</p>
+  </div>
+</div>
+
+<h2><span class="n">5</span>¿Viste una cámara, un control o un accidente? Informalo</h2>
+<div class="con-foto">
+  <img src="cap_ventana.png" alt="Ventana ¿Qué viste?: cámara fija, cámara móvil, policía de tránsito, accidente, manifestación, me equivoqué, el evento ya no está">
   <div>
     <ol>
-      <li>Tocá el botón azul <span class="chip az">📷 AVISAR CÁMARA</span>. En ese momento ya queda anotado el lugar.</li>
+      <li>Tocá el botón azul de abajo <span class="chip az">📷 INFORMAR CÁMARA</span>. En ese momento ya queda anotado el lugar.</li>
       <li>Elegí qué viste:
         <ul>
           <li><span class="chip nm">CÁMARA FIJA</span>: una cámara o medidor de velocidad que está siempre.</li>
-          <li><span class="chip mo">CONTROL DE TRÁNSITO</span>: cámara móvil puesta ese día (de la policía o del municipio).</li>
-          <li><span class="chip po">POLICÍA DE TRÁNSITO</span>: piden documentos o hacen el test de alcoholemia. Se muestra enseguida a los
-            demás conductores que vienen para ese lado, durante una hora. Si pasás y ya no está, tocá <b>YA NO ESTÁ</b> en el cartel violeta
-            y se borra para todos. (Para verlos hace falta internet.)</li>
+          <li><span class="chip mo">CÁMARA MÓVIL</span>: control de velocidad puesto ese día (de la policía o del municipio).</li>
+          <li><span class="chip po">POLICÍA DE TRÁNSITO</span>: piden documentos o hacen el test de alcoholemia.</li>
+          <li><span class="chip ac">ACCIDENTE</span>: un choque o un vehículo accidentado en la ruta.</li>
+          <li><span class="chip ma">MANIFESTACIÓN</span>: un corte o una manifestación en el camino.</li>
           <li><span class="chip gr">ME EQUIVOQUÉ, NO INFORMAR</span>: no se manda nada.</li>
-          <li><span class="chip bl">EL CONTROL YA NO ESTÁ</span>: borra para todos el control de policía de tránsito avisado más cerca
-            (a menos de 1 km).</li>
+          <li><span class="chip bl">EL EVENTO YA NO ESTÁ</span>: borra para todos la policía, el accidente o la manifestación avisados más
+            cerca (a menos de 1 km).</li>
         </ul>
       </li>
-      <li>La voz dice <i>"Gracias, cámara anotada"</i>. Si no elegís nada, se manda igual cuando termina la cuenta que baja en el botón
+      <li>La voz dice <i>"Gracias…"</i>. Si no elegís nada, se manda igual cuando termina la cuenta que baja en el botón
         <span class="chip gr">ME EQUIVOQUÉ, NO INFORMAR (10)</span>: ese es el tiempo para arrepentirse.</li>
     </ol>
+    <p><b>Es anónimo:</b> no se manda tu nombre ni tu teléfono, sólo el lugar y lo que viste.</p>
     <p><b>Sin señal no importa:</b> el aviso queda guardado en el celular y se manda solo cuando vuelve la señal.</p>
-    <p>Cada aviso <b>se revisa</b> antes de sumar la cámara a la lista para todos.</p>
+    <p>Cada cámara informada <b>se revisa</b> antes de sumarla a la lista para todos.</p>
+  </div>
+</div>
+<div class="con-foto">
+  <img src="cap_accidente.png" alt="Cartel rojo: accidente a 900 m, avisado hace 3 minutos, con el botón YA NO ESTÁ">
+  <div>
+    <p><b>Policía de tránsito, accidentes y manifestaciones les aparecen enseguida a los que vienen para ese lado</b>, durante una hora,
+      con un cartel y la voz: <span class="chip po">violeta</span> la policía, <span class="chip ac">rojo</span> los accidentes y
+      <span class="chip ma">verde</span> las manifestaciones. Así, entre todos, nos avisamos.</p>
+    <p>Cuando lo pasás, pregunta <i>"¿Seguía?"</i>. Si ya no estaba, tocá <b>YA NO ESTÁ</b> en el cartel y se borra para todos.</p>
+    <p>Para ver los avisos de los demás hace falta internet.</p>
   </div>
 </div>
 <div class="ojo">✋ <b>Manejando, solo un toque.</b> Si vas con acompañante, que lo haga él. Nunca te distraigas del camino.</div>
@@ -146,7 +172,10 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
     Sólo hace falta haber abierto InfoCam una vez con internet (o tenerla instalada con el ícono).</li>
   <li>La pantalla se mantiene encendida sola. Igual conviene tener el <b>cargador</b> puesto en viajes largos.</li>
   <li>Poné el celular en un <b>soporte</b> y con el <b>volumen</b> alto. En el iPhone, con la llave de silencio puesta el pitido puede no sonar.</li>
-  <li>Si la página se recarga o la cerrás, los datos del viaje vuelven a cero (los avisos de cámaras siguen andando).</li>
+  <li>Si la página se recarga o la cerrás, la distancia, la máxima y el promedio vuelven a cero.</li>
+  <li><b>Para salir</b>, mantené apretado el botón rojo <span class="chip ro">SALIR</span> de arriba a la izquierda hasta que se
+    llene la barra (un toque corto no sale, así no se cierra sin querer).</li>
+  <li>Si arriba aparece la franja verde <b>HAY UNA VERSIÓN NUEVA</b>, tocala estando parado: se actualiza sola.</li>
 </ul>
 
 <h2><span class="n">7</span>Tener en cuenta</h2>
