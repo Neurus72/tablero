@@ -111,7 +111,7 @@
   /* v6: botón y ventana para avisar una cámara que el tablero no conocía */
   #btnAviso { flex: 1; background: #1565c0; color: #fff; border: none; }
   .btns #btnAviso { font-size: calc(var(--u) * 5.6); padding: calc(var(--u) * 4) calc(var(--u) * 1); }   /* v21: más grande */
-  /* v21: grilla de 2 columnas: FIJA | MÓVIL, POLICÍA | ACCIDENTE, y abajo a todo el ancho MANIFESTACIÓN, ME EQUIVOQUÉ, YA NO ESTÁ */
+  /* v21: grilla de 2 columnas: FIJA | MÓVIL, POLICÍA | ACCIDENTE, y abajo a todo el ancho MANIFESTACIÓN, EMBOTELLAMIENTO (v25), ME EQUIVOQUÉ, YA NO ESTÁ */
   #aviso { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 30; background: rgba(0,0,0,.9);
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: center; gap: 12px; padding: 16px; text-align: center; }
   #aviso.on { display: grid; }
@@ -126,11 +126,13 @@
   #av-policial { background: #8e24aa; color: #fff; }   /* v18 */
   #av-accidente { background: #e53935; color: #fff; }  /* v21 */
   #av-manifestacion { background: #00897b; color: #fff; }   /* v21 */
-  @media (orientation: landscape) {   /* acostado: los 5 tipos en una fila de 3 y otra de 2 (si no, no entran a lo alto) */
+  #av-embotellamiento { background: #6d4c41; color: #fff; }   /* v25: pedido de Ricar */
+  #av-manifestacion, #av-embotellamiento { font-size: 6.3vmin !important; }   /* v25: "EMBOTELLAMIENTO" tiene que entrar en un renglón */
+  @media (orientation: landscape) {   /* acostado: los 6 tipos en dos filas de 3 (v25; si no, no entran a lo alto) */
     #aviso.on { grid-template-columns: repeat(6, 1fr); gap: 2.5vmin; }
-    #av-fija, #av-movil, #av-policial { grid-column: span 2; }
-    #av-accidente, #av-manifestacion.ancho, #av-cancelar.ancho, #av-yanoesta.ancho { grid-column: span 3; }
-    #aviso button, #av-fija, #av-movil, #av-policial, #av-accidente { font-size: 5vmin !important; padding: 3.5vmin 6px !important; }
+    #av-fija, #av-movil, #av-policial, #av-accidente, #av-manifestacion.ancho, #av-embotellamiento.ancho { grid-column: span 2; }
+    #av-cancelar.ancho, #av-yanoesta.ancho { grid-column: span 3; }
+    #aviso button, #av-fija, #av-movil, #av-policial, #av-accidente, #av-manifestacion, #av-embotellamiento { font-size: 5vmin !important; padding: 3.5vmin 6px !important; }
   }
   #av-cancelar { background: #333; color: #ff5252; font-size: 5vmin !important; padding: 3vmin !important; border: 3px solid #e00000 !important; }   /* v18: letras y borde rojos */
   #av-yanoesta { background: #fff; color: #6a1b9a; font-size: 5vmin !important; padding: 3vmin !important; border: 3px solid #e00000 !important; }   /* v18: borde rojo */
@@ -160,8 +162,10 @@
   #pol.on { display: flex; }
   #pol.t-accidente { background: #c62828; }   /* v21 */
   #pol.t-manifestacion { background: #00796b; }   /* v21 */
+  #pol.t-embotellamiento { background: #5d4037; }   /* v25 */
   #pol.t-accidente #pol-no { color: #b71c1c; }
   #pol.t-manifestacion #pol-no { color: #00695c; }
+  #pol.t-embotellamiento #pol-no { color: #4e342e; }
   #pol .ico { font-size: calc(var(--u) * 9); line-height: 1; }
   #pol .txt { flex: 1; min-width: 0; }
   #pol .t1 { font-size: calc(var(--u) * 5); font-weight: 800; line-height: 1.1; }
@@ -246,6 +250,7 @@
     <button id="av-policial">🚓<br>POLICÍA DE TRÁNSITO</button>
     <button id="av-accidente">💥<br>ACCIDENTE</button>
     <button id="av-manifestacion" class="ancho">📢 MANIFESTACIÓN</button>
+    <button id="av-embotellamiento" class="ancho">🚗 EMBOTELLAMIENTO</button>
     <button id="av-cancelar" class="ancho">ME EQUIVOQUÉ, NO INFORMAR</button>
     <button id="av-yanoesta" class="ancho">EL EVENTO YA NO ESTÁ</button>
   </div>
@@ -495,7 +500,7 @@ function avisoCerrar(tipo) {
     avisoPend.tipo = tipo;
     const c = colaLeer(); c.push(avisoPend); colaGuardar(c);
     decir({ policial: "Gracias, policía de tránsito avisada", movil: "Gracias, cámara móvil anotada", accidente: "Gracias, accidente avisado",
-      manifestacion: "Gracias, manifestación avisada", "?": "Informado" }[tipo] || "Gracias, cámara anotada");   // v21: + accidente y manifestación   // v18 · v19: se acabó el tiempo = "Informado"
+      manifestacion: "Gracias, manifestación avisada", embotellamiento: "Gracias, embotellamiento avisado", "?": "Informado" }[tipo] || "Gracias, cámara anotada");   // v21: + accidente y manifestación   // v18 · v19: se acabó el tiempo = "Informado"
     avisoMandar();
   }
   avisoPend = null;
@@ -505,6 +510,7 @@ $("av-movil").onclick = () => avisoCerrar("movil");
 $("av-policial").onclick = () => avisoCerrar("policial");   // v18: se muestra a los demás conductores durante 1 hora
 $("av-accidente").onclick = () => avisoCerrar("accidente");   // v21: también en vivo, 1 hora
 $("av-manifestacion").onclick = () => avisoCerrar("manifestacion");   // v21: también en vivo, 1 hora
+$("av-embotellamiento").onclick = () => avisoCerrar("embotellamiento");   // v25: también en vivo, 1 hora
 // v18: EL CONTROL YA NO ESTÁ (desde la ventana): borra el control avisado más cercano, a menos de 1 km. No se manda ningún aviso.
 $("av-yanoesta").onclick = function () {
   const a = avisoPend;
@@ -643,6 +649,7 @@ const EN_VIVO = {
   policial:      { ico: "🚓", nom: "POLICÍA DE TRÁNSITO", voz: "Policía de tránsito", seguia: "¿SEGUÍA EL CONTROL?", seguiaVoz: "¿Seguía el control?" },
   accidente:     { ico: "💥", nom: "ACCIDENTE", voz: "Accidente", seguia: "¿SEGUÍA EL ACCIDENTE?", seguiaVoz: "¿Seguía el accidente?" },
   manifestacion: { ico: "📢", nom: "MANIFESTACIÓN", voz: "Manifestación", seguia: "¿SEGUÍA LA MANIFESTACIÓN?", seguiaVoz: "¿Seguía la manifestación?" },
+  embotellamiento: { ico: "🚗", nom: "EMBOTELLAMIENTO", voz: "Embotellamiento", seguia: "¿SEGUÍA EL EMBOTELLAMIENTO?", seguiaVoz: "¿Seguía el embotellamiento?" },   // v25
 };
 const POL_SEG = 3600;          // se muestra 1 hora (igual que en el servidor)
 const POL_CADA_MS = 60000;     // cada cuánto se preguntan los controles
@@ -959,7 +966,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v24-1";
+const APP_VERSION = "infocam-v25-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;

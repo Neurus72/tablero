@@ -34,7 +34,7 @@
   .am { background: #ffb300; color: #000; } .ro { background: #ff1a1a; color: #fff; } .az { background: #1565c0; color: #fff; }
   .ve { background: #1a9e45; color: #fff; } .na { background: #f08a00; color: #000; } .gr { background: #333; color: #ddd; }
   .nm { background: #ff8c00; color: #000; } .mo { background: #2f8cff; color: #fff; } .po { background: #8e24aa; color: #fff; } .bl { background: #fff; color: #6a1b9a; }
-  .ac { background: #e53935; color: #fff; } .ma { background: #00897b; color: #fff; } .de { background: #0b2a3d; color: #9be7ff; border: 1px solid #00b7ff; }   /* v24 */
+  .ac { background: #e53935; color: #fff; } .ma { background: #00897b; color: #fff; } .em { background: #6d4c41; color: #fff; }   /* v25 */ .de { background: #0b2a3d; color: #9be7ff; border: 1px solid #00b7ff; }   /* v24 */
   .ojo { background: #1c1608; border: 1px solid #5a4500; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
   .colores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; }
   .colores > div { background: #000; border: 1px solid #333; border-radius: 10px; text-align: center; padding: 8px 2px; }
@@ -128,7 +128,7 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
 
 <h2><span class="n">5</span>¿Viste una cámara, un control o un accidente? Informalo</h2>
 <div class="con-foto">
-  <img src="cap_ventana.png" alt="Ventana ¿Qué viste?: cámara fija, cámara móvil, policía de tránsito, accidente, manifestación, me equivoqué, el evento ya no está">
+  <img src="cap_ventana.png" alt="Ventana ¿Qué viste?: cámara fija, cámara móvil, policía de tránsito, accidente, manifestación, embotellamiento, me equivoqué, el evento ya no está">
   <div>
     <ol>
       <li>Tocá el botón azul de abajo <span class="chip az">📷 INFORMAR CÁMARA</span>. En ese momento ya queda anotado el lugar.</li>
@@ -139,8 +139,9 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
           <li><span class="chip po">POLICÍA DE TRÁNSITO</span>: piden documentos o hacen el test de alcoholemia.</li>
           <li><span class="chip ac">ACCIDENTE</span>: un choque o un vehículo accidentado en la ruta.</li>
           <li><span class="chip ma">MANIFESTACIÓN</span>: un corte o una manifestación en el camino.</li>
+          <li><span class="chip em">EMBOTELLAMIENTO</span>: tránsito trabado, autos parados o muy lentos.</li>
           <li><span class="chip gr">ME EQUIVOQUÉ, NO INFORMAR</span>: no se manda nada.</li>
-          <li><span class="chip bl">EL EVENTO YA NO ESTÁ</span>: borra para todos la policía, el accidente o la manifestación avisados más
+          <li><span class="chip bl">EL EVENTO YA NO ESTÁ</span>: borra para todos la policía, el accidente, la manifestación o el embotellamiento avisados más
             cerca (a menos de 1 km).</li>
         </ul>
       </li>
@@ -155,9 +156,9 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
 <div class="con-foto">
   <img src="cap_accidente.png" alt="Cartel rojo: accidente a 900 m, avisado hace 3 minutos, con el botón YA NO ESTÁ">
   <div>
-    <p><b>Policía de tránsito, accidentes y manifestaciones les aparecen enseguida a los que vienen para ese lado</b>, durante una hora,
+    <p><b>Policía de tránsito, accidentes, manifestaciones y embotellamientos les aparecen enseguida a los que vienen para ese lado</b>, durante una hora,
       con un cartel y la voz: <span class="chip po">violeta</span> la policía, <span class="chip ac">rojo</span> los accidentes y
-      <span class="chip ma">verde</span> las manifestaciones. Así, entre todos, nos avisamos.</p>
+      <span class="chip ma">verde</span> las manifestaciones y <span class="chip em">marrón</span> los embotellamientos. Así, entre todos, nos avisamos.</p>
     <p>Cuando lo pasás, pregunta <i>"¿Seguía?"</i>. Si ya no estaba, tocá <b>YA NO ESTÁ</b> en el cartel y se borra para todos.</p>
     <p>Para ver los avisos de los demás hace falta internet.</p>
   </div>
