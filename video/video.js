@@ -241,8 +241,10 @@ window.SIN_VOZ = new URLSearchParams(location.search).has('mudo');
     await senalar($('av-fija'), 1300); await senalar($('av-movil'), 900); await n;
     n = narrar('la <b>policía de tránsito</b>, un <b>accidente</b>…');
     await senalar($('av-policial'), 1300); await senalar($('av-accidente'), 900); await n;
-    n = narrar('…o una <b>manifestación</b>.');
-    await senalar($('av-manifestacion'), 900); await n;
+    n = narrar('una <b>manifestación</b>, un <b>embotellamiento</b>…');
+    await senalar($('av-manifestacion'), 1300); await senalar($('av-embotellamiento'), 900); await n;
+    n = narrar('…o un <b>control de velocidad por tramo</b>.');   // v27
+    await senalar($('av-tramo'), 1000); await n;
     n = narrar('Si te equivocaste, tocá <b>ME EQUIVOQUÉ</b> y no se manda nada.');
     await senalar($('av-cancelar'), 1200); await n;
     sinMarca();

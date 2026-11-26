@@ -1094,7 +1094,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v26-1";
+const APP_VERSION = "infocam-v27-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;

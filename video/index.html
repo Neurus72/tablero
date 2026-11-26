@@ -141,6 +141,9 @@
   #av-policial { background: #8e24aa; color: #fff; }   /* v20: igual que la app v19 */
   #av-accidente { background: #e53935; color: #fff; }   /* v22: como la app v21 */
   #av-manifestacion { background: #00897b; color: #fff; }
+  #av-embotellamiento { background: #6d4c41; color: #fff; }   /* v27: como la app v25 */
+  #av-tramo { background: #1a237e; color: #fff; outline: 2px solid #7986cb; outline-offset: -2px; }   /* v27: como la app v26 */
+  #av-manifestacion, #av-embotellamiento, #av-tramo { padding: calc(var(--u) * 2.4) calc(var(--u) * 1.5) !important; }
   #aviso button small { display: block; font-size: calc(var(--u) * 4); font-weight: 600; }
   #av-cancelar { background: #333; color: #ff5252; font-size: calc(var(--u) * 4.6) !important; padding: calc(var(--u) * 3) !important; border: 3px solid #e00000 !important; }
   #av-yanoesta { background: #fff; color: #6a1b9a; font-size: calc(var(--u) * 4.6) !important; padding: calc(var(--u) * 3) !important; border: 3px solid #e00000 !important; }
@@ -261,6 +264,8 @@
     <button id="av-policial">🚓<br>POLICÍA DE TRÁNSITO</button>
     <button id="av-accidente">💥<br>ACCIDENTE</button>
     <button id="av-manifestacion" class="ancho">📢 MANIFESTACIÓN</button>
+    <button id="av-embotellamiento" class="ancho">🚗 EMBOTELLAMIENTO</button>
+    <button id="av-tramo" class="ancho">⏱ CONTROL POR TRAMO</button>
     <button id="av-cancelar" class="ancho">ME EQUIVOQUÉ, NO INFORMAR</button>
     <button id="av-yanoesta" class="ancho">EL EVENTO YA NO ESTÁ</button>
   </div>
@@ -290,7 +295,7 @@
   </div>
 </div>
 
-<script src="../simulacion/ruta.js"></script><script src="video.js"></script><script src="../camaras.js"></script><script src="../estadistica.js"></script>
+<script src="ruta.js"></script><script src="video.js"></script><script src="../camaras.js"></script><script src="../estadistica.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
