@@ -34,7 +34,7 @@
   .am { background: #ffb300; color: #000; } .ro { background: #ff1a1a; color: #fff; } .az { background: #1565c0; color: #fff; }
   .ve { background: #1a9e45; color: #fff; } .na { background: #f08a00; color: #000; } .gr { background: #333; color: #ddd; }
   .nm { background: #ff8c00; color: #000; } .mo { background: #2f8cff; color: #fff; } .po { background: #8e24aa; color: #fff; } .bl { background: #fff; color: #6a1b9a; }
-  .ac { background: #e53935; color: #fff; } .ma { background: #00897b; color: #fff; } .em { background: #6d4c41; color: #fff; }   /* v25 */ .de { background: #0b2a3d; color: #9be7ff; border: 1px solid #00b7ff; }   /* v24 */
+  .ac { background: #e53935; color: #fff; } .ma { background: #00897b; color: #fff; } .em { background: #6d4c41; color: #fff; } .tr { background: #1a237e; color: #fff; }   /* v25 · v26 */ .de { background: #0b2a3d; color: #9be7ff; border: 1px solid #00b7ff; }   /* v24 */
   .ojo { background: #1c1608; border: 1px solid #5a4500; border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
   .colores { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 12px 0; }
   .colores > div { background: #000; border: 1px solid #333; border-radius: 10px; text-align: center; padding: 8px 2px; }
@@ -108,6 +108,16 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
     <p>Solo avisa las cámaras que están <b>adelante</b>, en el sentido en que vas, y andando a más de 10 km/h.</p>
   </div>
 </div>
+<div class="con-foto">
+  <img src="cap_tramo.png" alt="Cartel azul del control por tramo: promedio 60 km/h, faltan 170 m del tramo, máxima 60">
+  <div>
+    <p><b>Control por tramo:</b> en algunos lugares leen la patente al <b>entrar</b> y al <b>salir</b> de un tramo y calculan tu
+      <b>velocidad promedio</b>. Si es mayor que la máxima, hay multa, aunque hayas frenado frente a la cámara.</p>
+    <p>Antes de entrar aparece un <span class="chip tr">cartel azul</span> con la voz <i>"Control de velocidad por tramo…"</i>.
+      Adentro del tramo el cartel muestra <b>tu promedio</b> y cuánto falta. Si el promedio pasa la máxima, se pone
+      <span class="chip ro">rojo</span> y la voz dice <i>"Bajá la velocidad"</i>. Al salir te dice tu promedio final.</p>
+  </div>
+</div>
 
 <h2><span class="n">4</span>¿Hay cámaras hasta mi destino? (opcional)</h2>
 <div class="con-foto">
@@ -128,7 +138,7 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
 
 <h2><span class="n">5</span>¿Viste una cámara, un control o un accidente? Informalo</h2>
 <div class="con-foto">
-  <img src="cap_ventana.png" alt="Ventana ¿Qué viste?: cámara fija, cámara móvil, policía de tránsito, accidente, manifestación, embotellamiento, me equivoqué, el evento ya no está">
+  <img src="cap_ventana.png" alt="Ventana ¿Qué viste?: cámara fija, cámara móvil, policía de tránsito, accidente, manifestación, embotellamiento, control por tramo, me equivoqué, el evento ya no está">
   <div>
     <ol>
       <li>Tocá el botón azul de abajo <span class="chip az">📷 INFORMAR CÁMARA</span>. En ese momento ya queda anotado el lugar.</li>
@@ -140,6 +150,7 @@ y te dice la velocidad máxima. Se abre como una página y usa el GPS del celula
           <li><span class="chip ac">ACCIDENTE</span>: un choque o un vehículo accidentado en la ruta.</li>
           <li><span class="chip ma">MANIFESTACIÓN</span>: un corte o una manifestación en el camino.</li>
           <li><span class="chip em">EMBOTELLAMIENTO</span>: tránsito trabado, autos parados o muy lentos.</li>
+          <li><span class="chip tr">CONTROL POR TRAMO</span>: un cartel que avisa que se controla la velocidad promedio en un tramo.</li>
           <li><span class="chip gr">ME EQUIVOQUÉ, NO INFORMAR</span>: no se manda nada.</li>
           <li><span class="chip bl">EL EVENTO YA NO ESTÁ</span>: borra para todos la policía, el accidente, la manifestación o el embotellamiento avisados más
             cerca (a menos de 1 km).</li>

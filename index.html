@@ -127,15 +127,23 @@
   #av-accidente { background: #e53935; color: #fff; }  /* v21 */
   #av-manifestacion { background: #00897b; color: #fff; }   /* v21 */
   #av-embotellamiento { background: #6d4c41; color: #fff; }   /* v25: pedido de Ricar */
-  #av-manifestacion, #av-embotellamiento { font-size: 6.3vmin !important; }   /* v25: "EMBOTELLAMIENTO" tiene que entrar en un renglón */
+  #av-tramo { background: #1a237e; color: #fff; border: 2px solid #7986cb !important; }   /* v26 */
+  #av-manifestacion, #av-embotellamiento, #av-tramo { font-size: 6.3vmin !important; padding: 3vmin 10px !important; }
+  #av-tramo { font-size: 5.6vmin !important; }   /* v26: "CONTROL POR TRAMO" en un renglón */
   @media (orientation: landscape) {   /* acostado: los 6 tipos en dos filas de 3 (v25; si no, no entran a lo alto) */
     #aviso.on { grid-template-columns: repeat(6, 1fr); gap: 2.5vmin; }
     #av-fija, #av-movil, #av-policial, #av-accidente, #av-manifestacion.ancho, #av-embotellamiento.ancho { grid-column: span 2; }
-    #av-cancelar.ancho, #av-yanoesta.ancho { grid-column: span 3; }
-    #aviso button, #av-fija, #av-movil, #av-policial, #av-accidente, #av-manifestacion, #av-embotellamiento { font-size: 5vmin !important; padding: 3.5vmin 6px !important; }
+    #av-tramo.ancho, #av-cancelar.ancho, #av-yanoesta.ancho { grid-column: span 2; }   /* v26: 3 filas de 3 */
+    #aviso button, #av-fija, #av-movil, #av-policial, #av-accidente, #av-manifestacion, #av-embotellamiento, #av-tramo { font-size: 5vmin !important; padding: 3.5vmin 6px !important; }
   }
   #av-cancelar { background: #333; color: #ff5252; font-size: 5vmin !important; padding: 3vmin !important; border: 3px solid #e00000 !important; }   /* v18: letras y borde rojos */
   #av-yanoesta { background: #fff; color: #6a1b9a; font-size: 5vmin !important; padding: 3vmin !important; border: 3px solid #e00000 !important; }   /* v18: borde rojo */
+  @media (orientation: portrait) and (max-height: 700px) {   /* v26: pantallas cortas (360×640): todo un poco más apretado */
+    #aviso { gap: 8px; padding: 8px 16px; }
+    #aviso .tit { font-size: 6vmin; }
+    #av-fija, #av-movil, #av-policial, #av-accidente { padding: 2.5vmin 6px !important; }
+    #av-manifestacion, #av-embotellamiento, #av-tramo, #av-cancelar, #av-yanoesta { padding: 2vmin 10px !important; }
+  }
   #brujula { display: inline-block; width: 1.6em; height: 1.6em; vertical-align: -0.45em;   /* v11: más grande */
     transition: transform .3s; transform-origin: 50% 50%; }
   #brujula svg { width: 100%; height: 100%; display: block; }
@@ -154,9 +162,24 @@
   #cam .max { width: calc(var(--u) * 18); height: calc(var(--u) * 18); border-radius: 50%; background: #fff; color: #000;
     border: calc(var(--u) * 2) solid #e00000; display: flex; align-items: center; justify-content: center;
     font-size: calc(var(--u) * 7.5); font-weight: 800; flex: none; }
+  /* v26: cartel del CONTROL POR TRAMO (azul oscuro; rojo que titila si el promedio pasa la máxima) */
+  #tramo { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 4;
+    background: #1a237e; color: #fff; border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 2) calc(var(--u) * 3);
+    align-items: center; gap: calc(var(--u) * 3); box-shadow: 0 4px 20px rgba(0,0,0,.6); border: 2px solid #7986cb; }
+  #tramo.on { display: flex; }
+  #tramo.pasado { background: #ff1a1a; border-color: #fff; animation: titila .6s infinite alternate; }
+  #tramo.fin { background: #2e7d32; border-color: #a5d6a7; }
+  #tramo .ico { font-size: calc(var(--u) * 9); line-height: 1; }
+  #tramo .txt { flex: 1; min-width: 0; }
+  #tramo .t1 { font-size: calc(var(--u) * 4.8); font-weight: 800; line-height: 1.1; white-space: nowrap; }
+  #tramo .t2 { font-size: calc(var(--u) * 4.2); font-weight: 700; margin-top: 2px; white-space: nowrap; }
+  #tramo .t3 { font-size: calc(var(--u) * 3.6); font-weight: 600; opacity: .85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #tramo .max { width: calc(var(--u) * 18); height: calc(var(--u) * 18); border-radius: 50%; background: #fff; color: #000;
+    border: calc(var(--u) * 2) solid #e00000; display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--u) * 7.5); font-weight: 800; flex: none; }
   /* v18: cartel de CONTROL POLICIAL (avisado por otro conductor en la última hora), violeta, con botón YA NO ESTÁ.
      Va debajo del de cámara (si hay cámara, se ve la cámara). */
-  #pol { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 4;
+  #pol { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 3;   /* v26: 3 (el del tramo va encima) */
     background: #8e24aa; color: #fff; border-radius: calc(var(--u) * 3); padding: calc(var(--u) * 2) calc(var(--u) * 3);
     align-items: center; gap: calc(var(--u) * 2.5); box-shadow: 0 4px 20px rgba(0,0,0,.6); }
   #pol.on { display: flex; }
@@ -236,6 +259,9 @@
     <div id="cam"><div class="ico">📷</div>
       <div class="txt"><div class="t1" id="cam-t1">CÁMARA</div><div class="t2" id="cam-t2"></div><div class="t3" id="cam-t3"></div></div>
       <div class="max" id="cam-max">--</div></div>
+    <div id="tramo"><div class="ico">⏱</div>   <!-- v26: control por tramo -->
+      <div class="txt"><div class="t1" id="tr-t1"></div><div class="t2" id="tr-t2"></div><div class="t3" id="tr-t3"></div></div>
+      <div class="max" id="tr-max">--</div></div>
     <div id="pol"><div class="ico" id="pol-ico">🚓</div>
       <div class="txt"><div class="t1" id="pol-t1">POLICÍA DE TRÁNSITO</div><div class="t2" id="pol-t2"></div></div>
       <button id="pol-no">YA NO ESTÁ<small>tocá acá</small></button></div>
@@ -251,6 +277,7 @@
     <button id="av-accidente">💥<br>ACCIDENTE</button>
     <button id="av-manifestacion" class="ancho">📢 MANIFESTACIÓN</button>
     <button id="av-embotellamiento" class="ancho">🚗 EMBOTELLAMIENTO</button>
+    <button id="av-tramo" class="ancho">⏱ CONTROL POR TRAMO</button>
     <button id="av-cancelar" class="ancho">ME EQUIVOQUÉ, NO INFORMAR</button>
     <button id="av-yanoesta" class="ancho">EL EVENTO YA NO ESTÁ</button>
   </div>
@@ -305,7 +332,7 @@
   </div>
 </div>
 
-<script src="camaras.js"></script><script src="estadistica.js"></script>
+<script src="camaras.js"></script><script src="tramos.js"></script><script src="estadistica.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const PUNTOS = ["N","NE","E","SE","S","SO","O","NO"];
@@ -408,9 +435,11 @@ function onPos(p) {
     rumboGps = null;
   }
   camRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);
+  trRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null, c.accuracy);   // v26: antes que la policía
   polRevisar(punto, kmh, (c.heading != null && !isNaN(c.heading) && kmh > 5) ? c.heading : null);   // v18
-  $("slot-txt").textContent = !camActual && !polActual && kmh >= 10 ? "Sin cámaras cerca" : "";   // v11
-  $("btnRuta").className = !camActual && !polActual && kmh < 10 ? "ver" : "";   // v13: el botón de la ruta sólo parado
+  const trVis = trProx || trAct;   // v26
+  $("slot-txt").textContent = !camActual && !polActual && !trVis && kmh >= 10 ? "Sin cámaras cerca" : "";   // v11
+  $("btnRuta").className = !camActual && !polActual && !trVis && kmh < 10 ? "ver" : "";   // v13: el botón de la ruta sólo parado
   actParado = kmh < 10; actPintar();                                // v17: el aviso de versión nueva, sólo parado
 }
 
@@ -500,7 +529,7 @@ function avisoCerrar(tipo) {
     avisoPend.tipo = tipo;
     const c = colaLeer(); c.push(avisoPend); colaGuardar(c);
     decir({ policial: "Gracias, policía de tránsito avisada", movil: "Gracias, cámara móvil anotada", accidente: "Gracias, accidente avisado",
-      manifestacion: "Gracias, manifestación avisada", embotellamiento: "Gracias, embotellamiento avisado", "?": "Informado" }[tipo] || "Gracias, cámara anotada");   // v21: + accidente y manifestación   // v18 · v19: se acabó el tiempo = "Informado"
+      manifestacion: "Gracias, manifestación avisada", embotellamiento: "Gracias, embotellamiento avisado", tramo: "Gracias, control por tramo anotado", "?": "Informado" }[tipo] || "Gracias, cámara anotada");   // v21: + accidente y manifestación   // v18 · v19: se acabó el tiempo = "Informado"
     avisoMandar();
   }
   avisoPend = null;
@@ -511,6 +540,7 @@ $("av-policial").onclick = () => avisoCerrar("policial");   // v18: se muestra a
 $("av-accidente").onclick = () => avisoCerrar("accidente");   // v21: también en vivo, 1 hora
 $("av-manifestacion").onclick = () => avisoCerrar("manifestacion");   // v21: también en vivo, 1 hora
 $("av-embotellamiento").onclick = () => avisoCerrar("embotellamiento");   // v25: también en vivo, 1 hora
+$("av-tramo").onclick = () => avisoCerrar("tramo");   // v26: lo revisa Ricar (como las cámaras fijas)
 // v18: EL CONTROL YA NO ESTÁ (desde la ventana): borra el control avisado más cercano, a menos de 1 km. No se manda ningún aviso.
 $("av-yanoesta").onclick = function () {
   const a = avisoPend;
@@ -713,7 +743,7 @@ function polRevisar(p, kmh, rumbo) {
 }
 function polMostrar(k, d) {
   const e = EN_VIVO[k.tipo] || EN_VIVO.policial;
-  $("pol").className = camActual ? "" : "on t-" + (k.tipo || "policial");   // si hay una cámara, se ve la cámara (el rojo titila y se transparentaba)
+  $("pol").className = camActual || trProx || trAct ? "" : "on t-" + (k.tipo || "policial");   // v26: tampoco con el tramo   // si hay una cámara, se ve la cámara (el rojo titila y se transparentaba)
   $("pol-ico").textContent = e.ico;
   const min = Math.max(1, Math.round((Date.now() / 1000 - k.t) / 60));
   if (polActual.pasado) {
@@ -736,6 +766,104 @@ function polBorrar(id) {   // se saca el punto acá y en el servidor, para todos
   decir("Informado");   // v19: con voz (pedido de Ricar), desde el cartel violeta o desde la ventana
   polNoMandar();
 };
+// ----- v26: CONTROL DE VELOCIDAD POR TRAMO (velocidad promedio) -----
+// En algunos lugares leen la patente al ENTRAR y al SALIR de un tramo y calculan el promedio: si es mayor que la máxima, multa
+// (frenar sólo frente a la cámara no sirve). TRAMOS viene de tramos.js: [lat entrada, lon entrada, lat salida, lon salida, máxima, ruta, lugar].
+// Antes de entrar: cartel azul + voz. Adentro: el PROMEDIO desde la entrada (distancia recorrida / tiempo) y cuánto falta;
+// si pasa la máxima, cartel rojo + voz "Bajá la velocidad" (cada 20 s como mucho). Al salir: "Fin del tramo, tu promedio fue N".
+// Los tiempos salen de la hora del GPS (p.t), así se puede probar con posiciones de mentira.
+const TR_SEG = 30, TR_MIN_M = 400, TR_MAX_M = 1500;   // se avisa 30 s antes de la entrada (entre 400 m y 1,5 km)
+const TR_ENTRA_M = 80;        // pasó por la entrada (o la salida) si estuvo a menos de esto y después se alejó
+const TR_VOZ_CADA = 20000;    // "Bajá la velocidad" no más de una vez cada 20 s
+let trProx = null;            // tramo ADELANTE, todavía no entró: {i, dMin, tMin, pMin}
+let trAct = null;             // ADENTRO del tramo: {i, t0, dist, ult, largo, dFin, dFinMin, prom, vozUlt, fin}
+let trVistos = {};            // tramos ya avisados → hora (no se repiten por 10 min)
+function trP(t, cual) { return cual ? { lat: t[2], lon: t[3] } : { lat: t[0], lon: t[1] }; }
+function trRevisar(p, kmh, rumbo, prec) {
+  if (typeof TRAMOS === "undefined") return;
+  const ahora = p.t;
+  if (trAct) {
+    const t = TRAMOS[trAct.i];
+    if (trAct.fin) { if (ahora - trAct.fin > 10000) trCerrar(); else trMostrar(); return; }   // "FIN DEL TRAMO" queda 10 s
+    if (prec == null || prec < 50) trAct.dist += distancia(trAct.ult, p) * 1000;
+    trAct.ult = p;
+    const dFin = distancia(p, trP(t, 1)) * 1000, seg = (ahora - trAct.t0) / 1000;
+    if (dFin < trAct.dFinMin) trAct.dFinMin = dFin;
+    trAct.dFin = dFin;
+    trAct.prom = seg >= 3 ? trAct.dist / seg * 3.6 : 0;
+    const salio = (trAct.dFinMin < TR_ENTRA_M && dFin > trAct.dFinMin + 20) || dFin < 15 ||
+      seg > 3600 || trAct.dist > trAct.largo * 1.6 + 1000;   // pasó la salida, o se fue por otro lado
+    if (salio) {
+      trAct.fin = ahora;
+      if (!camActual) decir("Fin del control por tramo. Tu promedio fue " + Math.round(trAct.prom));
+      trMostrar(); return;
+    }
+    if (t[4] && trAct.prom > t[4] && seg >= 10 && ahora - trAct.vozUlt > TR_VOZ_CADA && !camActual) {
+      trAct.vozUlt = ahora;
+      decir("Tu promedio es " + Math.round(trAct.prom) + ". Máxima " + t[4] + ". Bajá la velocidad");
+    }
+    trMostrar(); return;
+  }
+  if (trProx) {
+    const t = TRAMOS[trProx.i], d = distancia(p, trP(t, 0)) * 1000;
+    if (d < trProx.dMin) { trProx.dMin = d; trProx.tMin = ahora; trProx.pMin = p; }
+    if (trProx.dMin < TR_ENTRA_M && d > trProx.dMin + 20) {   // pasó por la entrada: empieza a contar desde ahí
+      const t0 = trProx.tMin;
+      trAct = { i: trProx.i, t0: t0, dist: distancia(trProx.pMin, p) * 1000, ult: p, largo: distancia(trP(t, 0), trP(t, 1)) * 1000,
+        dFin: 1e9, dFinMin: 1e9, prom: 0, vozUlt: 0, fin: 0 };
+      trProx = null;
+      if (!camActual) decir("Empieza el control por tramo" + (t[4] ? ". Mantené el promedio debajo de " + t[4] : ""));
+      trRevisar(p, kmh, rumbo, prec); return;
+    }
+    if (d > trProx.dMin + 300) { trCerrar(); return; }   // se fue para otro lado
+    trMostrar(d); return;
+  }
+  if (rumbo == null || kmh < 10) return;
+  const avisoM = Math.min(TR_MAX_M, Math.max(TR_MIN_M, kmh / 3.6 * TR_SEG));
+  let mejor = -1, mejorD = 1e9;
+  for (let i = 0; i < TRAMOS.length; i++) {
+    const t = TRAMOS[i];
+    if (Math.abs(t[0] - p.lat) > 0.02 || Math.abs(t[1] - p.lon) > 0.025) continue;
+    if (trVistos[i] && ahora - trVistos[i] < 600000) continue;
+    const ini = trP(t, 0), d = distancia(p, ini) * 1000;
+    if (d > avisoM || d > mejorD) continue;
+    if (d > TR_ENTRA_M && difAng(rumbo, rumboA(p, ini)) > (d < 150 ? 60 : CAM_ANGULO)) continue;   // la entrada tiene que estar adelante
+    if (difAng(rumbo, rumboA(ini, trP(t, 1))) > 75) continue;   // y el tramo, para el mismo lado que voy (no la otra mano)
+    mejor = i; mejorD = d;
+  }
+  if (mejor < 0) return;
+  const t = TRAMOS[mejor], largo = distancia(trP(t, 0), trP(t, 1)) * 1000;
+  trVistos[mejor] = ahora;
+  trProx = { i: mejor, dMin: mejorD, tMin: ahora, pMin: p };
+  if (!camActual) decir("Control de velocidad por tramo a " + metrosTexto(mejorD) + ". Se mide el promedio en " + metrosTexto(largo) +
+    (t[4] ? ". Máxima " + t[4] : ""));
+  trMostrar(mejorD);
+}
+function trKm(d) { return d >= 1000 ? (d / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(d / 10) * 10 + " m"; }
+function trMostrar(d) {
+  const caja = $("tramo");
+  const k = trAct || trProx; if (!k) { caja.className = ""; return; }
+  const t = TRAMOS[k.i];
+  $("tr-max").textContent = t[4] || "?";
+  $("tr-t3").textContent = ["Tramo de " + trKm(distancia(trP(t, 0), trP(t, 1)) * 1000), t[5], t[6]].filter(Boolean).join(" · ");
+  let clase = "on";
+  if (trProx) {
+    $("tr-t1").textContent = "CONTROL POR TRAMO";
+    $("tr-t2").textContent = "a " + trKm(d) + " · mide el promedio";
+  } else if (trAct.fin) {
+    clase += " fin";
+    $("tr-t1").textContent = "FIN DEL TRAMO";
+    $("tr-t2").textContent = "Tu promedio: " + Math.round(trAct.prom) + " km/h";
+  } else {
+    const pasado = t[4] && trAct.prom > t[4] && (trAct.ult.t - trAct.t0) >= 10000;
+    if (pasado) clase += " pasado";
+    $("tr-t1").textContent = "PROMEDIO " + Math.round(trAct.prom) + " km/h";
+    $("tr-t2").textContent = pasado ? "¡BAJÁ LA VELOCIDAD!" : "Faltan " + trKm(trAct.dFin) + " del tramo";
+  }
+  caja.className = camActual ? "" : clase;   // si hay una cámara, se ve la cámara
+}
+function trCerrar() { trProx = null; trAct = null; $("tramo").className = ""; }
+
 let polNoEnviando = false;
 async function polNoMandar() {
   if (polNoEnviando || typeof SIMULACION !== "undefined") return;
@@ -966,7 +1094,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 // Al abrir (y cada 30 min, y al volver a la pantalla) se fija en internet la VERSION de sw.js publicada; si es distinta
 // de la de esta página, con el auto PARADO aparece la franja verde. Un toque recarga la página nueva (sin desinstalar).
 // Sin señal no pregunta nada. OJO: APP_VERSION tiene que ser IGUAL a VERSION de sw.js en cada publicación.
-const APP_VERSION = "infocam-v25-1";
+const APP_VERSION = "infocam-v26-1";
 let actHay = false, actParado = true;
 function actPintar() {
   const on = actHay && actParado, b = document.body.classList;

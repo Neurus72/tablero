@@ -2,8 +2,8 @@
 // Siempre intenta traer lo nuevo de internet; si no hay señal, usa lo guardado.
 // Al cambiar archivos, subir VERSION. OJO v17: también APP_VERSION en index.html (tienen que ser IGUALES:
 // la app compara su APP_VERSION con la VERSION de este archivo publicado para avisar "HAY UNA VERSIÓN NUEVA").
-const VERSION = "infocam-v25-1";
-const BASICOS = ["./", "camaras.js", "estadistica.js", "manifest.webmanifest", "icono-192.png", "icono-512.png", "apple-touch-icon.png"];
+const VERSION = "infocam-v26-1";
+const BASICOS = ["./", "camaras.js", "tramos.js", "estadistica.js", "manifest.webmanifest", "icono-192.png", "icono-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", function (e) {
   // v17: "reload" = bajarlos de internet de verdad (no lo que el navegador tenía guardado de antes)
